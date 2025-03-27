@@ -2,15 +2,20 @@ import './App.css'
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from './Login'
 import SignIn from './SignIn'
-import Account from './Account';
+import Profile from './Profile';
+import Home from './Home';
 
 function App() {
   
   return (
     <Router>
             <Routes>
-                <Route path="/" element={<Login />} />
-                <Route path="/Account" element={<Account />} />
+              
+                <Route path="/" element={<Home />} />
+                  <Route path="/:profile" element={<Profile />} >
+                </Route>
+
+                <Route path="/Login" element={<Login />} />
                 <Route path="/SignIn" element={<SignIn />} />
             </Routes>
     </Router>

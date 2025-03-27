@@ -15,14 +15,15 @@ function Login(){
         try {
                 const response = await fetch("http://localhost:3000/auth/login", {
                     method: "POST",
-                    headers: {"Content-Type": "application/json"}, //pq precisa isso
-                    body: JSON.stringify({ username, password }) //explicar oque json.stringfy faz
+                    headers: {"Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify({ username, password }) 
                 });
 
                 const data = await response.json();
 
                 if(data.success){
-                    navigate("/Account");
+                    navigate('/');
                 }
                 else{
                     setMessage(data.message);  
@@ -30,6 +31,7 @@ function Login(){
 
         } catch (error) {
             setMessage("Error Connecting to Server")
+            console.log(error)
         }
     };
 
