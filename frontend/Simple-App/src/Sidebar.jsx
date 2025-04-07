@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import SearchBar from "./SearchBar";
+import styles from "./css/Sidebar.module.css";
 
 function Sidebar() {
 
@@ -25,18 +26,49 @@ function Sidebar() {
     return(
 
         <>
-            <ul className="sidebar-items">
-                <li onClick={() => navigate('/')}>Home</li>
-                <li onClick={() => setQuery(!query)}>Search</li>
-                {query ? (<SearchBar></SearchBar>) : null}
+            <ul className={styles.sidebar}>
+                <li className={styles.sidebarItem}>
+                    <div className={styles.sidebarItemBox} onClick={() => navigate('/')}>
+                        Home
+                    </div>
+                </li>
+
+                <li className={styles.sidebarItem}>
+                    <div className={styles.sidebarItemBox} onClick={() => setQuery(!query)}>
+                        Search
+                    </div>                
+                </li>
+
+                {query ? (
+                    <div>
+                        <SearchBar />
+                    </div>
+                ) : null}
+
                 {user ? (
                     <>
-                        <li onClick={() => navigate(`/${user.username}`)}>Profile</li>
-                        <li onClick={() => navigate('/Settings')}>Settings</li>
-                        <li><button onClick={logout}>Log out</button></li>
+                         <li className={styles.sidebarItem}>
+                            <div className={styles.sidebarItemBox} onClick={() => navigate(`/${user.username}`)}>
+                                Profile
+                            </div>
+                        </li>
+                        <li className={styles.sidebarItem}>
+                            <div className={styles.sidebarItemBox} onClick={() => navigate('/Settings')}>
+                                Settings
+                            </div>
+                        </li>
+                        <li className={styles.sidebarItem}>
+                            <div className={styles.sidebarItemBox} onClick={logout}>
+                                Logout
+                            </div>
+                        </li>
                     </>
                 ) : (
-                    <li onClick={() => navigate('/login')}>Login</li>
+                    <li className={styles.sidebarItem}>
+                        <div className={styles.sidebarItemBox} onClick={() => navigate('/login')}>
+                            Login
+                        </div>
+                    </li>
                 )}
             </ul>
         </>
