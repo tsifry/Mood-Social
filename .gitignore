@@ -1,0 +1,26 @@
+# Ignore node_modules in both frontend and backend
+node_modules/
+backend/node_modules/
+frontend/Simple-app/node_modules/
+
+# Ignore environment files (secrets, DB passwords, API keys)
+*.env
+backend/.env
+frontend/Simple-app/.env
+
+# Ignore build output from React/Vite
+frontend/Simple-app/dist
+
+# Ignore log files
+*.log
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore editor/IDE folders
+.vscode/
+.idea/
+
+# Optional: ignore coverage if using testing tools like Jest
+coverage/
