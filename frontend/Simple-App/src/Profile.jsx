@@ -13,7 +13,8 @@ function Profile() {
     const { user } = useAuth();
     const { profile } = useParams();
 
-    const [posts, setPosts] =useState([]);
+    const [posts, setPosts] = useState([]);
+    const [following, setFollow] = useState(false)
 
 
     // Render posts
@@ -37,6 +38,28 @@ function Profile() {
         .catch(error => console.error('Error fetching posts:', error));
 
     }, [profile]);
+
+    // Checks if follow
+    useEffect(() => {
+
+        fetch(`http://localhost:3000/search/follow/${profile}`, {
+            method: "GET",
+            credentials: "include"
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                setFollow(data.follows)
+            } else {
+                setFollow(false)
+            }
+        })
+        .catch(err => {
+            console.error("Error checking follow status:", err);
+            setFollow(false);
+        });
+
+    }, [following, profile]);
 
     // Handles input change
     const handleChange = (e) => {
@@ -113,9 +136,71 @@ function Profile() {
         }
     };
 
-    const follow = () => {
-        return; // post pro search, provavelmente como params, pegar id do paraemetro de usuario 
-        // e atribuir como id de seguidor ao id de quem seguiu, pegar id de user no backend com req.user usando o middleware
+    // Handles following
+    const follow = async () => {
+        
+        try {
+            
+            const response = await fetch(`http://localhost:3000/search/follow`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify({ profile })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                await fetch(`http://localhost:3000/search/follow/${profile}`, {
+                    method: "GET",
+                    credentials: "include"
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setFollow(data.follows)
+                    } else {
+                        setFollow(false)
+                    }
+                })
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // Handles unfollowing
+    const unfollow = async () =>{
+        
+        try {
+
+            const response = await fetch(`http://localhost:3000/search/follow/${profile}`, {
+                method: "DELETE",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                await fetch(`http://localhost:3000/search/follow/${profile}`, {
+                    method: "GET",
+                    credentials: "include"
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setFollow(data.follows)
+                    } else {
+                        setFollow(false)
+                    }
+                })
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
     }
 
 
@@ -183,8 +268,16 @@ function Profile() {
                     : 
                     
                     (<> 
-                        <button onClick={() => follow}>Follow {profile}</button> 
-                        <p></p>
+                        {following ? (
+                        <>
+                            <button onClick={unfollow}>Unfollow {profile}</button> 
+                            <p></p>
+                        </>) : (
+                            
+                        <>
+                            <button onClick={follow}>Follow {profile}</button> 
+                            <p></p>
+                        </>)}
                     </>)}
 
             </div>
