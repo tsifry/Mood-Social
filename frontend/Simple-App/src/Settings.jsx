@@ -1,6 +1,7 @@
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import styles from "./css/Settings.module.css"
 
 function Settings() {
 
@@ -49,14 +50,22 @@ function Settings() {
                 <Sidebar></Sidebar>
             </div>
 
-            <div>
+            <div className={styles.Settings}>
                 {user ? (
                     <>
-                        <button>Upload profile image.</button>
-                        <form onSubmit={update_nickname}>
+                        <div>
+                            <div className={styles.username}>
+                                <h1>{user.username}</h1>
+                            </div>
+                        </div>
+
+                        <button className={styles.image_button}>Upload profile image.</button>
+                        <form onSubmit={update_nickname}
+                              className={styles.form}>
                             <input placeholder="Update username."
-                                   onChange={(e) => setUsername(e.target.value)}></input>
-                            <button>Ok</button>
+                                   onChange={(e) => setUsername(e.target.value)}
+                                   className={styles.input}></input>
+                            <button className={styles.upload_button}>Ok</button>
                         </form>
                     </>
                 ) : (
@@ -67,7 +76,7 @@ function Settings() {
                 )}
             </div>
 
-            <div>
+            <div className={styles.message}>
                 {message}
             </div>
         </>

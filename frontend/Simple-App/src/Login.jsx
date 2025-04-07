@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider";
+import styles from "./css/Login.module.css";
 
 function Login(){
 
@@ -45,38 +46,39 @@ function Login(){
 
     return(
         <>
-            <div className="Form-login">
+            <div className={styles.body}>
 
-                <form onSubmit={api}>
-                    <label htmlFor="Username">
-                        <h1>Username</h1>
+                <form onSubmit={api} className={styles.Login}>
+                    <label htmlFor="Username" className={styles.label}>
                         <input 
                             type="text" 
-                            placeholder="Enter a Username" 
+                            placeholder="Username" 
                             required
+                            className={styles.input}
                             value={username}
                             onChange={(e) => {setUserame(e.target.value)}}></input>
                     </label>
 
-                    <label htmlFor="Password">
-                        <h1>Password</h1>
+                    <label htmlFor="Password" className={styles.label}>
                         <input 
                             type="password" 
-                            placeholder="Enter a Password" 
+                            placeholder="Password" 
                             required
+                            className={styles.input}
                             value={password}
                             onChange={(e) => {setPassword(e.target.value)}}></input>
                     </label>
 
-                    <button type="submit"> Log In </button>
+                    <div className={styles.buttonRow}>
+                        <button type="submit" className={styles.submit}>Log In</button>
+                    </div>
+
+                    <button onClick={() => navigate("/SignIn")} className={styles.signin}>
+                            Don’t have an account? Sign in
+                    </button>
                 </form>
 
                 <h3>{message}</h3>
-
-                <div>
-                    <button onClick={() => navigate("/SignIn")}>Dont have an account? Sign in Here!</button>
-                </div>
-
             </div>
         </>
     )

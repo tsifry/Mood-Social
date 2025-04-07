@@ -38,7 +38,10 @@ ul {
   list-style-type: none;
 }
 
-body, html {
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
+  background-color: #0e0d0d; 
+  color: aliceblue;
 }
