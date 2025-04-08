@@ -38,12 +38,13 @@ const verifyToken = (req, res, next) => {
 
 }
 
+//Searchbar
 router.get('/', async (req, res) => {
     const searchQuery = req.query.query;
 
     if (!searchQuery) return res.json([]);
 
-    const [users] = await db.promise().query('SELECT username FROM users WHERE username LIKE ? LIMIT 10', [`%${searchQuery}%`])
+    const [users] = await db.promise().query('SELECT username, profile_image FROM users WHERE username LIKE ? LIMIT 10', [`%${searchQuery}%`])
 
     if (users.length === 0) return res.json([]);
 

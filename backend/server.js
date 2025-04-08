@@ -4,6 +4,7 @@ const authRoutes = require('./auth');
 const postsRoutes = require('./posts')
 const search = require('./search')
 const cookieParser = require("cookie-parser");
+const path = require('path');
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.use(cookieParser());
 app.use('/auth', authRoutes)
 app.use('/posts', postsRoutes)
 app.use('/search', search)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.listen(3000)

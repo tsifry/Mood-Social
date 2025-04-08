@@ -59,7 +59,7 @@ function SearchBar (){
         <ul className={styles.searchUl}>
             {results.map((result) => (
                 <li onClick={() => handleSelectUser(result.username)}
-                    className={styles.searchLi}>{result.username}</li>
+                    className={styles.searchLi}><img src={`http://localhost:3000/${result.profile_image}`} className={styles.search_image}></img>{result.username}</li>
             ))}
         </ul>)}
     

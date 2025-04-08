@@ -1,7 +1,9 @@
 import { useAuth } from "./AuthProvider";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import styles from "./css/Settings.module.css"
+
+
 
 function Settings() {
 
@@ -10,6 +12,8 @@ function Settings() {
 
     const [username, setUsername] = useState("")
     const [message, setMessage] =useState("")
+
+    const fileInputRef = useRef(null);
 
     const update_nickname = async (e) => {
         e.preventDefault();
@@ -43,6 +47,35 @@ function Settings() {
 
     }
 
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+            const res = await fetch("http://localhost:3000/posts/upload-profile", {
+                method: "POST",
+                credentials:"include",
+                body: formData
+            })
+
+            const data = await res.json();
+
+            if (data.success) {
+                const userRes = await fetch("http://localhost:3000/auth/me", { credentials: "include"})
+                const userData = await userRes.json();
+
+                setUser(userData.user);
+                console.log("Upload successful:", data.imagePath, userData.user);
+
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     return(
         <>
 
@@ -52,19 +85,40 @@ function Settings() {
 
             <div className={styles.Settings}>
                 {user ? (
-                    <>
+                    <>  
                         <div>
-                            <div className={styles.username}>
-                                <h1>{user.username}</h1>
+
+                            <div>
+                                <img src={`http://localhost:3000/${user.profile_image}`} alt="Profile"
+                                    className="profile_image"></img>
                             </div>
+
+                            <div>
+                                <div className={styles.username}>
+                                    <h1>{user.username}</h1>
+                                </div>
+                            </div>
+
                         </div>
 
-                        <button className={styles.image_button}>Upload profile image.</button>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            style={{ display: "none" }}
+                            onChange={handleImageUpload}
+                        />
+
+                        <button className={styles.image_button}
+                                onClick={() => fileInputRef.current.click()}>Upload profile image.</button>
+
                         <form onSubmit={update_nickname}
                               className={styles.form}>
-                            <input placeholder="Update username."
+
+                            <input placeholder="Change username."
                                    onChange={(e) => setUsername(e.target.value)}
                                    className={styles.input}></input>
+
                             <button className={styles.upload_button}>Ok</button>
                         </form>
                     </>

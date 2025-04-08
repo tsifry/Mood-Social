@@ -2,8 +2,10 @@ require('dotenv').config()
 
 const db = require('../backend/database');
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const fs = require('fs');
 const jwt = require('jsonwebtoken')
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
 
@@ -41,6 +43,19 @@ const verifyToken = (req, res, next) => {
 
 }
 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = Date.now() + '-' + file.originalname;
+        cb(null, uniqueName);
+    }
+});
+
+const upload = multer({storage: storage});
+
+//create post
 router.post('/create', verifyToken, (req, res) => {
     const post = req.body.submittedData;
     const user = req.user;
@@ -61,6 +76,7 @@ router.post('/create', verifyToken, (req, res) => {
         });
 });
 
+//renders profile
 router.get('/:profile', async (req, res) => {
     const { profile } = req.params;
 
@@ -83,6 +99,7 @@ router.get('/:profile', async (req, res) => {
     }
 });
 
+//delete post
 router.delete('/delete/:id',  verifyToken, async (req, res) =>{
     const postId = req.params.id;
     const userId = req.user.id;
@@ -109,12 +126,17 @@ router.delete('/delete/:id',  verifyToken, async (req, res) =>{
 
 });
 
+//username change
 router.post('/username-change', verifyToken, async (req, res) => {
     const new_username = req.body.username;
     const userId = req.user.id;
 
     if (!new_username || !userId ){
-        res.json({ success: false, message: "Not authorized." })
+        return res.json({ success: false, message: "Please enter a nickname." })
+    }
+
+    if (new_username.trim() === ""){
+        return res.json({success: false, message: "Cant update to non existent username."})
     }
 
     try {
@@ -141,5 +163,33 @@ router.post('/username-change', verifyToken, async (req, res) => {
     }
 
 });
+
+//change profile pic
+router.post('/upload-profile', upload.single('image'), verifyToken, async (req, res) => {
+    const imagePath =  "uploads/" + req.file.filename;
+    const userId = req.user.id;
+
+    try{
+
+        const [rows] = await db.promise().query("SELECT profile_image FROM users WHERE id = ?", [userId]);
+
+        const currentImage = rows[0]?.profile_image;
+
+        if (currentImage && !currentImage.includes('default.jpg')) {
+            const fullPath = path.join(__dirname, currentImage);
+            fs.unlink(fullPath, (err) => {
+                if (err) console.error('Failed to delete old image:', err);
+            });
+        }
+
+        await db.promise().query("UPDATE users SET profile_image = ? WHERE id = ?", [imagePath, userId]);
+
+        res.json({success: true, imagePath})
+
+    }  catch (err) {
+        console.log(err);
+    }
+})
+
 
 module.exports = router;

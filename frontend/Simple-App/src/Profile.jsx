@@ -17,7 +17,7 @@ function Profile() {
     const [following, setFollow] = useState(false)
 
 
-    // Render posts
+    // Render posts + pfp
     useEffect(() => {
 
         fetch(`http://localhost:3000/posts/${profile}`, {
@@ -212,7 +212,14 @@ function Profile() {
             </div>
 
             <div>
+
+                <div>
+                    <img src={`http://localhost:3000/${user.profile_image}`} alt="Profile"
+                         className="profile_image"></img>
+                 </div>
+
                 <h1>{profile} posts.</h1>
+
             </div>
 
 
