@@ -56,11 +56,12 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage});
 
 //create post
-router.post('/create', verifyToken, (req, res) => {
-    const post = req.body.submittedData;
+router.post('/create', upload.single("image"), verifyToken, (req, res) => {
+    const { song, quote, colorTheme } = req.body;
+    const imagePath = req.file ? `uploads/${req.file.filename}` : null;
     const user = req.user;
 
-    if (!post.song || !post.quote){
+    if (!song || !quote || !colorTheme || !imagePath){
         res.json({ success: false });
     }
 
@@ -68,7 +69,7 @@ router.post('/create', verifyToken, (req, res) => {
         res.json({ success: false });
     }
 
-    db.promise().query('INSERT INTO posts (user_id, song_url, quote) VALUES (?, ?, ?)', [user.id, post.song, post.quote])
+    db.promise().query('INSERT INTO posts (user_id, song_url, quote, image_url, colorTheme) VALUES (?, ?, ?, ?, ?)', [user.id, song, quote, imagePath, colorTheme])
         .then(() => res.json({ success: true }))
         .catch(err => {
             console.log(err);
@@ -87,7 +88,7 @@ router.get('/:profile', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        db.query('SELECT song_url, quote, id FROM posts WHERE user_id = ?', [userId], (err, results) => {
+        db.query('SELECT song_url, quote, id, colorTheme, image_url FROM posts WHERE user_id = ?', [userId], (err, results) => {
             if (err) {
                 return res.status(500).json({ message: 'Error retrieving posts' }); 
             }

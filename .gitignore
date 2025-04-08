@@ -1,6 +1,7 @@
 # Ignore node_modules in both frontend and backend
 node_modules/
 backend/node_modules/
+backend/uploads
 frontend/Simple-app/node_modules/
 
 # Ignore environment files (secrets, DB passwords, API keys)
@@ -24,3 +25,4 @@ Thumbs.db
 
 # Optional: ignore coverage if using testing tools like Jest
 coverage/
+

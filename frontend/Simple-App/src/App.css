@@ -27,12 +27,6 @@
 .read-the-docs {
   color: #888;
 }
-.post {
-  border: 2px solid red; 
-  padding: 10px;          
-  margin-bottom: 10px; 
-  border-radius: 10px;   
-}
 
 ul {
   list-style-type: none;

@@ -1,23 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import Sidebar from "./Sidebar";
+import styles from "./css/Profile.module.css";
 
 function Profile() {
 
     const [message , setMessage] = useState("");
 
-    const [formData, setFormData] = useState({ song: "", quote: "" });
+    const [formData, setFormData] = useState({ song: "", quote: "", colorTheme: "", image: null });
     const [submittedData, setSubmittedData] = useState(null);
+    const [song_type, setSongType] = useState("");
 
     const { user } = useAuth();
     const { profile } = useParams();
 
     const [posts, setPosts] = useState([]);
     const [following, setFollow] = useState(false)
+    const [pfp, setPfp] = useState(null);
+
+    const [posting, setPosting] = useState(false)
+
+    const colorThemes = {
+        sunset: { user: "#432C51", post: "#F1B5C6" },
+        ocean: { user: "#1B3B5F", post: "#A2D2FF" },
+        forest: { user: "#2E473B", post: "#B5E1B9" },
+        night: { user: "#1E1E2F", post: "#3A3A55" },
+        peach: { user: "#4F2E2E", post: "#F7C59F" },
+      };
+
+    const postFile = useRef(null);
 
 
-    // Render posts + pfp
+    // Render posts
     useEffect(() => {
 
         fetch(`http://localhost:3000/posts/${profile}`, {
@@ -39,7 +54,7 @@ function Profile() {
 
     }, [profile]);
 
-    // Checks if follow
+    // Checks for followage and other stuff about profile
     useEffect(() => {
 
         fetch(`http://localhost:3000/search/follow/${profile}`, {
@@ -50,6 +65,7 @@ function Profile() {
         .then(data => {
             if (data.success) {
                 setFollow(data.follows)
+                setPfp(data.pfp.profile_image)
             } else {
                 setFollow(false)
             }
@@ -59,7 +75,7 @@ function Profile() {
             setFollow(false);
         });
 
-    }, [following, profile]);
+    }, [following, profile, pfp]);
 
     // Handles input change
     const handleChange = (e) => {
@@ -67,31 +83,56 @@ function Profile() {
     }
 
     //Handles input submition
-    const handleKey = (e) => {
+    const handleSongSubmit = (e) => {
         if (e.key === "Enter") {
-            setSubmittedData({ ...formData, song: extractSoundCloud(formData.song) });
+          const { url, type } = extractAudioEmbed(formData.song) || {};
+      
+          if (url && type) {
+            setSubmittedData({ ...formData, song: url });
+            setSongType(type); 
+          }
         }
-    }
+      };
 
     //Regex for links
-    const extractSoundCloud = (input) => {
-        const regex = /https?:\/\/(?:w\.|)soundcloud\.com\/[^\s"]+/;
+    const extractAudioEmbed = (input) => {
+        const regex = /(https?:\/\/(?:open\.spotify\.com\/[^\s"]+|soundcloud\.com\/[^\s"]+))/;
         const match = input.match(regex);
-        return match ? match[0] : null
+        if (!match) return null;
+    
+        const url = match[0];
+        let type = "";
+    
+        if (url.includes("spotify.com")) {
+            type = "spotify";
+        } else if (url.includes("soundcloud.com")) {
+            type = "soundcloud";
+        }
+    
+        return { url, type };
     };
 
     // Handles posting
     const handlePost = async (e) => {
         e.preventDefault();
 
-        if (submittedData.song && submittedData.quote) {
+        setSubmittedData({ ...formData, quote: formData.quote, colorTheme: formData.colorTheme, image: formData.image });
+
+        const formDataToSend = new FormData();
+
+        formDataToSend.append("song", submittedData.song);
+        formDataToSend.append("quote", submittedData.quote);
+        formDataToSend.append("colorTheme", submittedData.colorTheme);
+        formDataToSend.append("image", submittedData.image); // ✅ this is the actual file
+
+
+        if (submittedData.song && submittedData.quote && submittedData.colorTheme && submittedData.image) {
 
             try {
                 const response = await fetch("http://localhost:3000/posts/create", {
                     method: "POST",
-                    headers: {"Content-Type": "application/json"},
                     credentials: "include",
-                    body: JSON.stringify({ submittedData: submittedData}) 
+                    body: formDataToSend
                 });
 
                 const data = await response.json();
@@ -104,11 +145,18 @@ function Profile() {
                     alert("Could not post.");  
                 }
 
-        } catch (error) {
-            alert("Error Connecting to Server")
-            console.log(error)
-        }
-        }
+            } catch (error) {
+                alert("Error Connecting to Server")
+                console.log(error)
+            }
+        } 
+    }
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+
+        if (!file) return;
+        setFormData({ ...formData, image: file });
     }
 
     // Handles deletion
@@ -203,6 +251,12 @@ function Profile() {
         }
     }
 
+    //Handles post cancel
+    const cancellPost = () => {
+        setFormData({ song: "", quote: "", colorTheme: "", image: null });
+        setSubmittedData(null);
+        setPosting(false);
+    }
 
     return (
         <div>
@@ -211,105 +265,189 @@ function Profile() {
                 <Sidebar></Sidebar>
             </div>
 
-            <div>
+            <div className={styles.user}>
 
                 <div>
-                    <img src={`http://localhost:3000/${user.profile_image}`} alt="Profile"
+                    <img src={`http://localhost:3000/${pfp}`} alt="Profile"
                          className="profile_image"></img>
                  </div>
 
-                <h1>{profile} posts.</h1>
+                <h1>{profile}</h1>
 
-            </div>
-
-
-            <div>
-                {user.username === profile ? 
-                    (<> 
-                        <div>
-
-                            <h2>Song of the day:</h2>
-
-                            <div> {!submittedData?.song && 
-                                (<input type="text"
-                                    value={formData.song}
-                                    name="song"
-                                    onChange={handleChange}
-                                    onKeyDown={handleKey}>
-                                    </input>)}
-                            </div>
-
-                            <div>{submittedData?.song && (<iframe
-                                width="100%"
-                                height="166"
-                                scrolling="no"
-                                frameBorder="no"
-                                allow="autoplay"
-                                src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(submittedData.song)}`}
-                            />)}</div>
-
-                        </div>
-
-                        <div>
-                            <h2>Quote of the day:</h2>
-                            
-                            <div>{!submittedData?.quote && 
-                                (<input type="text"
-                                    value={formData.quote}
-                                    name="quote"
-                                    onChange={handleChange}
-                                    onKeyDown={handleKey}>
-                                </input> )} 
-                            </div>
-
-                            <div>{submittedData && submittedData.quote}</div>
-                                
-                            <p></p>
-                            <button onClick={handlePost}> Post </button>
-                            <p></p>
-
-                        </div>
-
-                    </>) 
-
-                    : 
-                    
-                    (<> 
+                {user.username !== profile && (<>
+                
+                    <> 
                         {following ? (
                         <>
-                            <button onClick={unfollow}>Unfollow {profile}</button> 
+                            <button onClick={unfollow} className={styles.follow_button}>Unfollow {profile}</button> 
                             <p></p>
                         </>) : (
                             
                         <>
-                            <button onClick={follow}>Follow {profile}</button> 
+                            <button onClick={follow} className={styles.follow_button}>Follow {profile}</button> 
                             <p></p>
                         </>)}
-                    </>)}
+                    </>
+                
+                </>)}
 
             </div>
 
-            <div>
-                {posts.length > 0 ? (
-                    posts.map((post, index) => (
-                        <div key={index} className="post">
-                            <iframe
-                                width="100%"
-                                height="166"
-                                scrolling="no"
-                                frameBorder="no"
-                                allow="autoplay"
-                                src={`https://w.soundcloud.com/player/?url=${post.song_url}`}
-                            />
-                            <h1>{post.quote}</h1>
+            {posting && user.username === profile &&
+            (<> <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <button className={styles.closeButton} onClick={cancellPost}>✕</button>
 
-                            {user.username === profile ? (<button onClick={() => handleDelete(post.id)}>Delete</button>) : null}
+                        <div className={styles.post_message}>
+                            <h2>Song of the day.</h2>
+                            <h3>Paste a soundcloud or Spotify song link</h3>
+                        </div>
+
+                        <div>
+                            <input type="text"
+                                   name="song"
+                                   value={formData.song}
+                                   onChange={handleChange}
+                                   onKeyDown={handleSongSubmit}></input>
+                            
+                        </div>
+                           
+                        <div>
+                            {song_type === "spotify" && (<>
+                                    <iframe style="border-radius:12px" 
+                                                src={`${submittedData.song}?utm_source=generator&theme=0`}
+                                                width="100%" height="352" frameBorder="0" allowfullscreen="" 
+                                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" l
+                                                oading="lazy">
+                                    </iframe>
+                            </>)}
+
+                            {song_type === "soundcloud" && (<>
+                                    <iframe width="100%"
+                                                height="152"
+                                                scrolling="no"
+                                                frameBorder="no"
+                                                allow="autoplay"
+                                                src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(submittedData.song)}
+                                                &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}>
+                                    </iframe>
+                            </>)}
+                        </div>
+
+                        <div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={postFile}
+                                style={{ display: "none" }}
+                                onChange={handleImageUpload}
+                            />
+
+                            <button className={styles.image_button}
+                                    onClick={() => postFile.current.click()}>Upload image.</button>
+                        </div>
+
+                        <div className={styles.themePicker}>
+
+                            <h2>Pick your color vibe</h2>
+
+                            <div className={styles.themeOptions}>
+                                {Object.entries(colorThemes).map(([key, value]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setFormData({ ...formData, colorTheme: key })}
+                                    style={{
+                                    background: `linear-gradient(45deg, ${value.user}, ${value.post})`,
+                                    border: formData.colorTheme === key ? "2px solid white" : "none",
+                                    width: "50px",
+                                    height: "50px",
+                                    borderRadius: "50%",
+                                    margin: "0.5rem",
+                                    cursor: "pointer",
+                                    }}
+                                />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={styles.post_message}>
+
+                            <h2>Quote of the day</h2>
+                            <h3>Type your best quote!</h3>
 
                         </div>
-                    ))
-                ) : (
-                    <></>
-                )}    
+
+                        <div>
+                            
+                        </div>
+
+                        <button onClick={handlePost}>Post</button>
+                    </div>
+                </div>
+            
+            </>)}
+
+            <div>
+                {user.username === profile && (
+                    <div >
+                        <button onClick={() => setPosting(!posting)} className={styles.posting}>Post Today's mood</button>
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.posts}>
+                {posts.map((post, index) => {
+                    const theme = colorThemes[post.colorTheme] || colorThemes["night"];
+                    const {url, type } = extractAudioEmbed(post.song_url);
+
+                    return (
+                        <div key={index} className={styles.post} style={{ backgroundColor: theme.post }}>
+
+                            <div className={styles.post_user} style={{ backgroundColor: theme.user }}>
+                                <img src={`http://localhost:3000/${pfp}`} className={styles.user_image} />
+                                <h1>{profile}</h1>
+                            </div>
+
+                            <div className={styles.playerWrapper}>
+
+                                {type === "spotify" && (
+                                    <iframe style="border-radius:12px" 
+                                            src={`${url}?utm_source=generator&theme=0`}
+                                            width="100%" height="352" frameBorder="0" allowfullscreen="" 
+                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" l
+                                            oading="lazy">
+                                    </iframe>
+                                )}
+
+                                {type === "soundcloud" && (
+                                    <iframe width="100%"
+                                            height="152"
+                                            scrolling="no"
+                                            frameBorder="no"
+                                            allow="autoplay"
+                                            src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}
+                                            &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}>
+                                    </iframe>
+                                )}
+
+                            </div>
+
+                            {post.image_url && (
+                                <div className={styles._image}>
+                                <img src={`http://localhost:3000/${post.image_url}`} className={styles._image} />
+                                </div>
+                            )}
+
+                            <div className={styles.captionBox} style={{ backgroundColor: theme.user }}>
+                                <h1 className={styles.captionText}>{post.quote}</h1>
+
+                                {user.username === profile && (
+                                    <button onClick={() => handleDelete(post.id)} className={styles.deleteButton}>Delete</button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
                   
             </div>
 

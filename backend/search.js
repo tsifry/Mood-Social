@@ -71,7 +71,7 @@ router.post('/follow', verifyToken, async (req, res) => {
         });
 });
 
-//Rendering if follows
+//Rendering stuff about the profile
 router.get('/follow/:profile', verifyToken, async (req, res) => {
     const profile = req.params.profile
     const userID = req.user.id
@@ -80,14 +80,19 @@ router.get('/follow/:profile', verifyToken, async (req, res) => {
 
         const profile_id = await getUserIdFromUsername(profile);
 
+        if (!profile_id){
+            console.log("User not found")
+        }
+        const [image] = await db.promise().query('SELECT profile_image FROM users WHERE id = ?', [profile_id])
+
         db.query('SELECT followed_id FROM follows WHERE follower_id = ? AND followed_id = ?', [userID, profile_id], (err, results) => {
             if (err) {
                 return res.status(500).json({ success: false, message: 'Database error.' });
             }
             if (results.length > 0) {
-                return res.json({ success: true, follows: true });
+                return res.json({ success: true, follows: true, pfp: image[0] });
             } else {
-                return res.json({ success: true, follows: false });
+                return res.json({ success: true, follows: false, pfp: image[0] });
             }
         })
 
@@ -125,5 +130,6 @@ router.delete('/follow/:profile', verifyToken, async (req, res) => {
 
     }
 })
+
 
 module.exports = router;
