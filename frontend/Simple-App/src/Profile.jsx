@@ -85,32 +85,40 @@ function Profile() {
     //Handles input submition
     const handleSongSubmit = (e) => {
         if (e.key === "Enter") {
-          const { url, type } = extractAudioEmbed(formData.song) || {};
-      
-          if (url && type) {
-            setSubmittedData({ ...formData, song: url });
-            setSongType(type); 
-          }
+          setSubmittedData({ ...submittedData, song: formData.song });
+          setSongType(extractAudioEmbed(submittedData.song).type);
         }
-      };
+    };
+
+    const handleQuoteSubmit = (e) => {
+        if (e.key === "Enter") {
+            setSubmittedData({ ...formData, quote: formData.quote });
+        }
+    }
 
     //Regex for links
     const extractAudioEmbed = (input) => {
-        const regex = /(https?:\/\/(?:open\.spotify\.com\/[^\s"]+|soundcloud\.com\/[^\s"]+))/;
-        const match = input.match(regex);
-        if (!match) return null;
-    
-        const url = match[0];
-        let type = "";
-    
-        if (url.includes("spotify.com")) {
-            type = "spotify";
-        } else if (url.includes("soundcloud.com")) {
-            type = "soundcloud";
+        const spotifyRegex = /https?:\/\/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/
+        const soundcloudRegex = /https?:\/\/(www\.)?soundcloud\.com\/[^\s"]+/;
+      
+        const spotifyMatch = input.match(spotifyRegex);
+        if (spotifyMatch) {
+            return {
+                type: "spotify",
+                url: `https://open.spotify.com/embed/track/${spotifyMatch[1]}`
+            };
         }
-    
-        return { url, type };
-    };
+      
+        const soundcloudMatch = input.match(soundcloudRegex);
+        if (soundcloudMatch) {
+          return {
+            type: "soundcloud",
+            url: soundcloudMatch[0],
+          };
+        }
+      
+        return { type: null, url: null };
+      };
 
     // Handles posting
     const handlePost = async (e) => {
@@ -255,6 +263,7 @@ function Profile() {
     const cancellPost = () => {
         setFormData({ song: "", quote: "", colorTheme: "", image: null });
         setSubmittedData(null);
+        setSongType("");
         setPosting(false);
     }
 
@@ -314,23 +323,27 @@ function Profile() {
                            
                         <div>
                             {song_type === "spotify" && (<>
-                                    <iframe style="border-radius:12px" 
-                                                src={`${submittedData.song}?utm_source=generator&theme=0`}
-                                                width="100%" height="352" frameBorder="0" allowfullscreen="" 
-                                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" l
-                                                oading="lazy">
-                                    </iframe>
+                                <iframe
+                                    style={{ borderRadius: "12px" }}
+                                    src={`${extractAudioEmbed(submittedData.song).url}?utm_source=generator&theme=0`}
+                                    width="100%"
+                                    height="150"
+                                    frameBorder="0"
+                                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                    allowFullScreen
+                                    loading="lazy"
+                                />
                             </>)}
 
                             {song_type === "soundcloud" && (<>
-                                    <iframe width="100%"
-                                                height="152"
-                                                scrolling="no"
-                                                frameBorder="no"
-                                                allow="autoplay"
-                                                src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(submittedData.song)}
-                                                &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}>
-                                    </iframe>
+                                <iframe width="100%"
+                                    height="152"
+                                    scrolling="no"
+                                    frameBorder="no"
+                                    allow="autoplay"
+                                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(submittedData.song)}
+                                    &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
+                                />
                             </>)}
                         </div>
 
@@ -376,6 +389,10 @@ function Profile() {
                             <h3>Type your best quote!</h3>
 
                         </div>
+                                <input value={formData.quote}
+                                       name="quote"
+                                       onChange={handleChange}
+                                       onKeyDown={handleQuoteSubmit}></input>
 
                         <div>
                             
@@ -411,11 +428,14 @@ function Profile() {
                             <div className={styles.playerWrapper}>
 
                                 {type === "spotify" && (
-                                    <iframe style="border-radius:12px" 
+                                    <iframe style={{ borderRadius: "12px" }}
                                             src={`${url}?utm_source=generator&theme=0`}
-                                            width="100%" height="352" frameBorder="0" allowfullscreen="" 
-                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" l
-                                            oading="lazy">
+                                            width="100%"
+                                            height="240"
+                                            frameBorder="0"
+                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                            allowFullScreen
+                                            loading="lazy">
                                     </iframe>
                                 )}
 
