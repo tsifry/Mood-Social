@@ -4,8 +4,9 @@
     gap: 20px;
     align-items: center;
     /*border: 1px solid;*/
-    padding-bottom: 60px;
+    padding-bottom: 50px;
     padding-top: 30px;
+    padding-right: 20px;
 }
 
 .posting{
@@ -60,7 +61,6 @@
     gap: 1rem;
     background-color: var(--light-color); /* will be overridden inline */
     max-width: 700px; /* or whatever slim width you prefer */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -75,7 +75,11 @@
     border-radius: 2rem 2rem 0 0;
     color: white;
     font-weight: bold;
-    background-color: var(--dark-color); /* overridden inline */
+    /* overridden inline */
+}
+
+.post_user:hover{
+    border: solid 1px white;
 }
 
 
@@ -187,7 +191,7 @@
     font-size: 1rem;
     line-height: 1.5;
     resize: none;
-  }
+}
   
 .modalContent input {
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -271,3 +275,91 @@
     margin-top: 0.25rem;
 }
 
+.welcome_text {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1.1rem;
+    color: #fcfcfc;
+    margin: 0.5rem 0;
+    text-align: center;
+    font-weight: 500;
+}
+  
+._button {
+    background-color: #76c7a9;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    margin: 0.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+  
+._button:hover {
+    background-color: #5abf96;
+    transform: scale(1.05);
+}
+  
+._button:active {
+    background-color: #4aa585;
+    transform: scale(1);
+}
+
+.feedHeader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 40px;
+    font-family: 'Georgia', serif;
+    text-align: center;
+    position: relative;
+}
+  
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+  
+.dropdownContent {
+    display: none;
+    position: absolute;
+    top: 100%; /* show below the button */
+    left: 0; /* align with button’s left edge */
+    background-color: #2a2a2a;
+    min-width: 160px;
+    border-radius: 8px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdownButton {
+    background-color: #3e8baa;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Georgia', serif; /* match the heading font */
+    margin-bottom: 0.1rem;
+}
+  
+.dropdownContent div {
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+}
+  
+.dropdownContent div:hover {
+    background-color: #6d6b6b;
+}
+  
+.dropdown:hover .dropdownContent {
+    display: block;
+}
+  
+  

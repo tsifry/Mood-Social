@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import Sidebar from "./Sidebar";
 import styles from "./css/Profile.module.css";
@@ -7,13 +7,13 @@ import styles from "./css/Profile.module.css";
 function Profile() {
 
     const [message , setMessage] = useState("");
-
     const [formData, setFormData] = useState({ song: "", quote: "", colorTheme: "", image: null });
     const [submittedData, setSubmittedData] = useState(null);
     const [song_type, setSongType] = useState("");
 
     const { user } = useAuth();
     const { profile } = useParams();
+    const navigate = useNavigate();
 
     const [posts, setPosts] = useState([]);
     const [following, setFollow] = useState(false)
@@ -27,7 +27,7 @@ function Profile() {
         forest: { user: "#2E473B", post: "#B5E1B9" },
         night: { user: "#1E1E2F", post: "#3A3A55" },
         peach: { user: "#4F2E2E", post: "#F7C59F" },
-      };
+    };
 
     const postFile = useRef(null);
 
@@ -118,7 +118,7 @@ function Profile() {
         }
       
         return { type: null, url: null };
-      };
+    };
 
     // Handles posting
     const handlePost = async (e) => {
@@ -266,6 +266,10 @@ function Profile() {
         setSongType("");
         setPosting(false);
     }
+
+    const navigateToUser = (user) => {
+        navigate(`/${user}`);
+    } 
 
     return (
         <div>
@@ -420,7 +424,8 @@ function Profile() {
                     return (
                         <div key={index} className={styles.post} style={{ backgroundColor: theme.post }}>
 
-                            <div className={styles.post_user} style={{ backgroundColor: theme.user }}>
+                            <div className={styles.post_user} style={{ backgroundColor: theme.user, cursor: "pointer" }}
+                                 onClick={() => navigateToUser(profile)}>
                                 <img src={`http://localhost:3000/${pfp}`} className={styles.user_image} />
                                 <h1>{profile}</h1>
                             </div>
@@ -440,14 +445,14 @@ function Profile() {
                                 )}
 
                                 {type === "soundcloud" && (
-                                    <iframe width="100%"
-                                            height="152"
-                                            scrolling="no"
-                                            frameBorder="no"
-                                            allow="autoplay"
-                                            src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}
-                                            &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}>
-                                    </iframe>
+                                   <iframe
+                                        width="100%"
+                                        height="152"
+                                        scrolling="no"
+                                        frameBorder="no"
+                                        allow="autoplay"
+                                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
+                                    ></iframe>
                                 )}
 
                             </div>

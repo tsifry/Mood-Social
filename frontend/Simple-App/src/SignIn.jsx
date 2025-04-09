@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Navigate, useNavigate } from "react-router-dom"
+import styles from "./css/Login.module.css";
 
 function SignIn(){
 
@@ -41,40 +42,46 @@ function SignIn(){
 
     return(
         <>
-            <div className="Form-SignIn">
+            <div className={styles.body}>
+                <form className={styles.Login} onSubmit={api}>
+                <label className={styles.label} htmlFor="Username">
+                    <h1>Choose Username</h1>
+                    <input
+                        className={styles.input}
+                        type="text"
+                        placeholder="Enter a Username"
+                        required
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                </label>
 
-                <form onSubmit={api}>
-                    <label htmlFor="Username">
-                        <h1>Choose Username</h1>
-                        <input 
-                            type="text" 
-                            placeholder="Enter a Username" 
-                            required
-                            value={username}
-                            onChange={(e) => {setUsername(e.target.value)}}></input>
-                    </label>
+                <label className={styles.label} htmlFor="Password">
+                    <h1>Choose Password</h1>
+                    <input
+                        className={styles.input}
+                        type="password"
+                        placeholder="Enter a Password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </label>
 
-                    <label htmlFor="Password">
-                        <h1>Choose Password</h1>
-                        <input 
-                            type="password" 
-                            placeholder="Enter a Password" 
-                            required
-                            value={password}
-                            onChange={(e) => {setPassword(e.target.value)}}></input>
-                    </label>
+                <button type="submit" className={styles.submit}>Sign In</button>
 
-                    <button type="submit"> Sign In </button>
-                    <div>
-                        {message}
-                    </div>
-
+                <div style={{ textAlign: "center", color: "#ccc", marginTop: "1rem" }}>
+                    {message}
+                </div>
                 </form>
 
-                <div>{success && (<button onClick={() => navigate("/")}>Log In here!</button>)}</div>
-
+                {success && (
+                <button className={styles.signin} onClick={() => navigate("/")}>
+                    Log In here!
+                </button>
+                )}
             </div>
-        </>
+         </>
     )
 }
 

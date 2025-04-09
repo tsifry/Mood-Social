@@ -1,6 +1,6 @@
 
 .body {
-    background-color: #0e0d0d;
+    background-color: #0f0f11;
     min-height: 90vh;
     display: flex;
     justify-content: center;
@@ -11,9 +11,9 @@
   }
   
   .Login {
-    background-color: #1f1f1f;
+    background-color: #0f0f11;
     padding: 2rem 3rem;
-    padding-top: 200px;
+    padding-top: 100px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
