@@ -1,42 +1,8 @@
 const db = require('./database');
 const express = require("express");
-const jwt = require('jsonwebtoken')
+const middleware = require('./middlweare')
 
 const router = express.Router();
-
-async function getUserIdFromUsername(username){
-    
-    const [rows] = await db.promise().query('SELECT id FROM users WHERE username = ?', [username])
-
-    if (rows.length === 0){
-        return false;
-    }
-
-    const id = rows[0].id;
-    
-    return id;
-
-}
-
-const verifyToken = (req, res, next) => {
-    const token = req.cookies.token;
-
-    if (!token) {
-        return res.status(403).json({ message: 'No token provided' });
-    }
-    
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          return res.status(401).json({ message: 'Invalid token' });
-        }
-    
-        // Add user info to the request (e.g., user ID)
-        req.user = decoded;  // `decoded` contains the payload, e.g., { id: 1, username: 'user1' }
-    
-        next(); // Proceed to the next middleware or route handler
-    });
-
-}
 
 //Searchbar
 router.get('/', async (req, res) => {
@@ -53,11 +19,11 @@ router.get('/', async (req, res) => {
 })
 
 //Following
-router.post('/follow', verifyToken, async (req, res) => {
+router.post('/follow', middleware.verifyToken, async (req, res) => {
     const profile = req.body.profile;
     const userID = req.user.id
     
-    const profile_id = await getUserIdFromUsername(profile);
+    const profile_id = await middleware.getUserIdFromUsername(profile);
 
     if (!profile || !profile_id ) {
         res.json({success: false})
@@ -72,45 +38,56 @@ router.post('/follow', verifyToken, async (req, res) => {
 });
 
 //Rendering stuff about the profile
-router.get('/follow/:profile', verifyToken, async (req, res) => {
-    const profile = req.params.profile
-    const userID = req.user.id
+router.get('/follow/:profile', async (req, res) => {
+    const profile = req.params.profile;
+    const token = req.cookies?.token; // optional chaining to avoid crashing
 
-    try {
+    const profile_id = await middleware.getUserIdFromUsername(profile);
+    
+    if (!profile_id) {
+        return res.json({ success: false, message: "User not found" });
+    }
 
-        const profile_id = await getUserIdFromUsername(profile);
+    const [imageResult] = await db.promise().query(
+        'SELECT profile_image FROM users WHERE id = ?',
+        [profile_id]
+    );
 
-        if (!profile_id){
-            console.log("User not found")
-        }
-        const [image] = await db.promise().query('SELECT profile_image FROM users WHERE id = ?', [profile_id])
+    const image = imageResult[0];
 
-        db.query('SELECT followed_id FROM follows WHERE follower_id = ? AND followed_id = ?', [userID, profile_id], (err, results) => {
+    // If no token, just return image
+    if (!token) {
+        return res.status(200).json({ success: false, message: 'Not logged in', pfp: image });
+    }
+
+    const decoded = middleware.decodeToken(token);
+    if (!decoded) {
+        return res.status(401).json({ success: false, message: 'Invalid token', pfp: image });
+    }
+
+    const userID = decoded.id;
+
+    db.query(
+        'SELECT followed_id FROM follows WHERE follower_id = ? AND followed_id = ?',
+        [userID, profile_id],
+        (err, results) => {
             if (err) {
                 return res.status(500).json({ success: false, message: 'Database error.' });
             }
-            if (results.length > 0) {
-                return res.json({ success: true, follows: true, pfp: image[0] });
-            } else {
-                return res.json({ success: true, follows: false, pfp: image[0] });
-            }
-        })
-
-    }  catch (err) {
-
-        return res.status(400).json({ success: false, message: 'Invalid username.' });
-
-    }
-})
+            const follows = results.length > 0;
+            return res.json({ success: true, follows, pfp: image });
+        }
+    );
+});
 
 //unfollowing
-router.delete('/follow/:profile', verifyToken, async (req, res) => {
+router.delete('/follow/:profile', middleware.verifyToken, async (req, res) => {
     const profile = req.params.profile
     const userID = req.user.id
 
     try {
 
-        const profile_id = await getUserIdFromUsername(profile);
+        const profile_id = await middleware.getUserIdFromUsername(profile);
 
         if (!profile || !profile_id )
             res.json({success: false})

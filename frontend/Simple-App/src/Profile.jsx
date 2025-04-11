@@ -68,10 +68,11 @@ function Profile() {
                 setPfp(data.pfp.profile_image)
             } else {
                 setFollow(false)
+                setPfp(data.pfp.profile_image)
             }
         })
         .catch(err => {
-            console.error("Error checking follow status:", err);
+            console.error("Error retrieving profile info:", err);
             setFollow(false);
         });
 
@@ -280,14 +281,18 @@ function Profile() {
 
             <div className={styles.user}>
 
-                <div>
-                    <img src={`http://localhost:3000/${pfp}`} alt="Profile"
-                         className="profile_image"></img>
-                 </div>
+                {pfp && (
+                    <>
+                         <div>
+                            <img src={`http://localhost:3000/${pfp}`} alt="Profile"
+                                className="profile_image"></img>
+                        </div>
 
-                <h1>{profile}</h1>
+                        <h1>{profile}</h1>
+                    </>
+                )}
 
-                {user.username !== profile && (<>
+                {user && user.username !== profile && pfp && (<>
                 
                     <> 
                         {following ? (

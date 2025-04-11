@@ -110,13 +110,18 @@ function Home (){
                 <div className={styles.feedHeader}>
                     <h1 className={styles.welcome_text}>For you posts.</h1>
                     
-                    <div className={styles.dropdown}>
-                        <button className={styles.dropdownButton}>Filter ▼</button>
-                        <div className={styles.dropdownContent}>
-                            <div onClick={() => setFilter("all")}>All Posts</div>
-                            <div onClick={() => setFilter("followed")}>Follow Only</div>
+                    {user && (
+
+                        <div className={styles.dropdown}>
+                            <button className={styles.dropdownButton}>Filter ▼</button>
+                            <div className={styles.dropdownContent}>
+                                <div onClick={() => setFilter("all")}>All Posts</div>
+                                <div onClick={() => setFilter("followed")}>Follow Only</div>
+                            </div>
                         </div>
-                    </div>
+
+                    )}
+                    
                 </div>
 
                 <div className={styles.posts}>

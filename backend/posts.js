@@ -6,42 +6,10 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken')
 const multer = require('multer');
 const path = require('path');
+const middleware = require('./middlweare')
 
 const router = express.Router();
 
-async function getUserIdFromUsername(username){
-    
-    const [rows] = await db.promise().query('SELECT id FROM users WHERE username = ?', [username])
-
-    if (rows.length === 0){
-        return false;
-    }
-
-    const id = rows[0].id;
-    
-    return id;
-
-}
-
-const verifyToken = (req, res, next) => {
-    const token = req.cookies.token;
-
-    if (!token) {
-        return res.status(403).json({ message: 'No token provided' });
-    }
-    
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          return res.status(401).json({ message: 'Invalid token' });
-        }
-    
-        // Add user info to the request (e.g., user ID)
-        req.user = decoded;  // `decoded` contains the payload, e.g., { id: 1, username: 'user1' }
-    
-        next(); // Proceed to the next middleware or route handler
-    });
-
-}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -56,7 +24,7 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage});
 
 //create post
-router.post('/create', upload.single("image"), verifyToken, (req, res) => {
+router.post('/create', upload.single("image"), middleware.verifyToken, (req, res) => {
     const { song, quote, colorTheme } = req.body;
     const imagePath = req.file ? `uploads/${req.file.filename}` : null;
     const user = req.user;
@@ -82,7 +50,7 @@ router.get('/:profile', async (req, res) => {
     const { profile } = req.params;
 
     try{
-        const userId = await getUserIdFromUsername(profile);
+        const userId = await middleware.getUserIdFromUsername(profile);
         
         if (!userId) {
             return res.status(404).json({ message: 'User not found' });
@@ -101,7 +69,7 @@ router.get('/:profile', async (req, res) => {
 });
 
 //delete post
-router.delete('/delete/:id',  verifyToken, async (req, res) =>{
+router.delete('/delete/:id',  middleware.verifyToken, async (req, res) =>{
     const postId = req.params.id;
     const userId = req.user.id;
 
@@ -128,7 +96,7 @@ router.delete('/delete/:id',  verifyToken, async (req, res) =>{
 });
 
 //username change
-router.post('/username-change', verifyToken, async (req, res) => {
+router.post('/username-change', middleware.verifyToken, async (req, res) => {
     const new_username = req.body.username;
     const userId = req.user.id;
 
@@ -166,7 +134,7 @@ router.post('/username-change', verifyToken, async (req, res) => {
 });
 
 //change profile pic
-router.post('/upload-profile', upload.single('image'), verifyToken, async (req, res) => {
+router.post('/upload-profile', upload.single('image'), middleware.verifyToken, async (req, res) => {
     const imagePath =  "uploads/" + req.file.filename;
     const userId = req.user.id;
 
