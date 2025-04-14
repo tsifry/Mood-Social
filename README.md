@@ -50,7 +50,6 @@ Esse projeto foi desenvolvido com foco em práticas modernas de **desenvolviment
 ## 📸 Imagens do Projeto
 
 > ![image](https://github.com/user-attachments/assets/1ce2538d-c465-40f3-b6db-95956ea8c9d1)  
-> ![image2](https://github.com/user-attachments/assets/e102f963-760f-4e97-8af4-bebfd42ac20e)
 
 ---
 
