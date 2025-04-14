@@ -14,7 +14,7 @@ Esse projeto foi desenvolvido com foco em práticas modernas de **desenvolviment
 
 🎵 **Publicações Diárias de Humor**  
 - Cada usuário pode postar:  
-  - Um link de música (YouTube, Spotify, etc.)  
+  - Um link de música (Spotify, Soundcloud)  
   - Uma imagem  
   - Um título ou frase que represente o dia  
 
@@ -22,10 +22,10 @@ Esse projeto foi desenvolvido com foco em práticas modernas de **desenvolviment
 - Visualização de todas as postagens de um usuário  
 - Edição do nome de usuário e imagem de perfil  
 - Feed de amigos
+- Feed Geral
 
 🗑️ **Gerenciamento de Postagens**  
 - Criar, visualizar e deletar publicações  
-
 ---
 
 ## 🧰 Tecnologias Utilizadas
