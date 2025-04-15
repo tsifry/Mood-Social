@@ -1,164 +1,166 @@
-require('dotenv').config()
+require('dotenv').config();
 
-const db = require('../backend/database');
 const express = require("express");
 const fs = require('fs');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const middleware = require('./middlweare')
+const middleware = require('./middlweare');
+const db = require('../backend/database'); // already using .promise()
 
 const router = express.Router();
 
-
+// Setup Multer for uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = Date.now() + '-' + file.originalname;
-        cb(null, uniqueName);
-    }
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 
-const upload = multer({storage: storage});
+const upload = multer({ storage });
 
-//create post
-router.post('/create', upload.single("image"), middleware.verifyToken, (req, res) => {
+// ------------------------------------
+// CREATE POST
+// ------------------------------------
+router.post('/create', upload.single("image"), middleware.verifyToken, async (req, res) => {
     const { song, quote, colorTheme } = req.body;
     const imagePath = req.file ? `uploads/${req.file.filename}` : null;
     const user = req.user;
 
-    if (!song || !quote || !colorTheme || !imagePath){
-        res.json({ success: false });
+    if (!song || !quote || !colorTheme || !imagePath || !user) {
+        return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
-    if (!user){
-        res.json({ success: false });
+    try {
+        await db.query(
+            'INSERT INTO posts (user_id, song_url, quote, image_url, colorTheme) VALUES (?, ?, ?, ?, ?)',
+            [user.id, song, quote, imagePath, colorTheme]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Database error" });
     }
-
-    db.promise().query('INSERT INTO posts (user_id, song_url, quote, image_url, colorTheme) VALUES (?, ?, ?, ?, ?)', [user.id, song, quote, imagePath, colorTheme])
-        .then(() => res.json({ success: true }))
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({ success: false, message: "Database error" });
-        });
 });
 
-//renders profile
+// ------------------------------------
+// RENDER PROFILE POSTS
+// ------------------------------------
 router.get('/:profile', async (req, res) => {
     const { profile } = req.params;
 
-    try{
+    try {
         const userId = await middleware.getUserIdFromUsername(profile);
-        
+
         if (!userId) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        db.query('SELECT song_url, quote, id, colorTheme, image_url FROM posts WHERE user_id = ?', [userId], (err, results) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error retrieving posts' }); 
-            }
-            
-            res.json(results);
-        })
+        const [results] = await db.query(
+            'SELECT song_url, quote, id, colorTheme, image_url FROM posts WHERE user_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+
+        if(results.length === 0){
+            return res.json({ message: "User didnt post anything yet!"});
+        }
+
+        res.json(results);
     } catch (error) {
-        return res.status(404).json({ message : "Error 404 " + error})
+        console.error(error);
+        return res.status(500).json({ message: 'Error retrieving posts' });
     }
 });
 
-//delete post
-router.delete('/delete/:id',  middleware.verifyToken, async (req, res) =>{
+// ------------------------------------
+// DELETE POST
+// ------------------------------------
+router.delete('/delete/:id', middleware.verifyToken, async (req, res) => {
     const postId = req.params.id;
     const userId = req.user.id;
 
     try {
+        const [post] = await db.query('SELECT * FROM posts WHERE id = ?', [postId]);
 
-        const [post] = await db.promise().query('SELECT * FROM posts WHERE id = ?', [postId]);
-
-        if (post.length === 0){
+        if (post.length === 0) {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        if (post[0].user_id != userId ){
-            return res.status(403).json({ message: 'You are not authorized to delete this post' });
+        if (post[0].user_id !== userId) {
+            return res.status(403).json({ message: 'Unauthorized to delete this post' });
         }
 
-        await db.promise().query('DELETE FROM posts WHERE id = ?', [postId]);
+        await db.query('DELETE FROM posts WHERE id = ?', [postId]);
         res.status(200).json({ message: 'Post deleted successfully' });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting post' });
     }
-
 });
 
-//username change
+// ------------------------------------
+// CHANGE USERNAME
+// ------------------------------------
 router.post('/username-change', middleware.verifyToken, async (req, res) => {
-    const new_username = req.body.username;
+    const newUsername = req.body.username;
     const userId = req.user.id;
 
-    if (!new_username || !userId ){
-        return res.json({ success: false, message: "Please enter a nickname." })
-    }
-
-    if (new_username.trim() === ""){
-        return res.json({success: false, message: "Cant update to non existent username."})
+    if (!newUsername || newUsername.trim() === "") {
+        return res.status(400).json({ success: false, message: "Please enter a valid username." });
     }
 
     try {
-        await db.promise().query('UPDATE users SET username = ? WHERE id = ?', [new_username, userId])
-        
-        const user = { id: userId, username: new_username };
-        const newToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" })
+        await db.query('UPDATE users SET username = ? WHERE id = ?', [newUsername, userId]);
 
-        res.cookie("token", newToken, {   
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === "production", 
+        const user = { id: userId, username: newUsername };
+        const newToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+
+        res.cookie("token", newToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
             sameSite: "strict"
         });
 
-        res.json({ success: true, message: "Nickname updated." });
+        res.json({ success: true, message: "Username updated." });
 
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {
-            return res.json({ success: false, message: "Username already exists." });
-        } else {
-            console.log(err);
-            return res.status(500).json({ success: false, message: "Error trying to update username, try again later." });
+            return res.status(409).json({ success: false, message: "Username already exists." });
         }
-    }
 
+        console.error(err);
+        return res.status(500).json({ success: false, message: "Database error" });
+    }
 });
 
-//change profile pic
+// ------------------------------------
+// CHANGE PROFILE PICTURE
+// ------------------------------------
 router.post('/upload-profile', upload.single('image'), middleware.verifyToken, async (req, res) => {
-    const imagePath =  "uploads/" + req.file.filename;
+    const imagePath = "uploads/" + req.file.filename;
     const userId = req.user.id;
 
-    try{
-
-        const [rows] = await db.promise().query("SELECT profile_image FROM users WHERE id = ?", [userId]);
+    try {
+        const [rows] = await db.query("SELECT profile_image FROM users WHERE id = ?", [userId]);
 
         const currentImage = rows[0]?.profile_image;
 
         if (currentImage && !currentImage.includes('default.jpg')) {
-            const fullPath = path.join(__dirname, currentImage);
+            const fullPath = path.join(__dirname, "..", currentImage);
             fs.unlink(fullPath, (err) => {
                 if (err) console.error('Failed to delete old image:', err);
             });
         }
 
-        await db.promise().query("UPDATE users SET profile_image = ? WHERE id = ?", [imagePath, userId]);
+        await db.query("UPDATE users SET profile_image = ? WHERE id = ?", [imagePath, userId]);
 
-        res.json({success: true, imagePath})
+        res.json({ success: true, imagePath });
 
-    }  catch (err) {
-        console.log(err);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to upload image" });
     }
-})
-
+});
 
 module.exports = router;
+

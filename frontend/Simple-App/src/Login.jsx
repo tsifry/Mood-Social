@@ -13,7 +13,9 @@ function Login(){
 
     const { setUser } = useAuth();
 
-    const api = async (e) => {
+
+    //login
+    const login = async (e) => {
         e.preventDefault();
 
         try {
@@ -48,7 +50,7 @@ function Login(){
         <>
             <div className={styles.body}>
 
-                <form onSubmit={api} className={styles.Login}>
+                <form onSubmit={login} className={styles.Login}>
                     <label htmlFor="Username" className={styles.label}>
                         <input 
                             type="text" 

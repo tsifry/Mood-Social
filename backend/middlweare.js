@@ -1,44 +1,48 @@
-import db from './database.js'
-import jwt from 'jsonwebtoken';
+const db = require('./database');
+const jwt = require('jsonwebtoken');
 
-export async function getUserIdFromUsername(username){
-    
-    const [rows] = await db.promise().query('SELECT id FROM users WHERE username = ?', [username])
-
-    if (rows.length === 0){
-        return false;
+// Get user ID from username
+async function getUserIdFromUsername(username) {
+    try {
+        const [rows] = await db.query(
+            'SELECT id FROM users WHERE username = ?',
+            [username]
+        );
+        return rows.length > 0 ? rows[0].id : null;
+    } catch (error) {
+        console.error('Error fetching user ID:', error);
+        return null;
     }
-
-    const id = rows[0].id;
-    
-    return id;
-
 }
 
-export const verifyToken = (req, res, next) => {
+// Middleware to verify JWT token from cookies
+function verifyToken(req, res, next) {
     const token = req.cookies.token;
 
     if (!token) {
-        return res.status(403).json({ message: 'No token provided' });
+        return res.status(403).json({ message: 'Access denied. No token provided.' });
     }
-    
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          return res.status(401).json({ message: 'Invalid token' });
-        }
-    
-        // Add user info to the request (e.g., user ID)
-        req.user = decoded;  // `decoded` contains the payload, e.g., { id: 1, username: 'user1' }
-    
-        next(); // Proceed to the next middleware or route handler
-    });
 
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        req.user = decoded; // Payload: { id, username }
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid or expired token.' });
+    }
 }
 
-export function decodeToken(token) {
+// Decode token manually (non-middleware use)
+function decodeToken(token) {
     try {
         return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     } catch (err) {
         return null;
     }
 }
+
+module.exports = {
+    getUserIdFromUsername,
+    verifyToken,
+    decodeToken
+};

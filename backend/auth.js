@@ -17,7 +17,7 @@ async function Hashing_password(password){
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
-    const [rows] = await db.promise().query('SELECT password_hash, id FROM users WHERE username = ?', [username])
+    const [rows] = await db.query('SELECT password_hash, id FROM users WHERE username = ?', [username])
 
     if (rows.length === 0){
         return res.json({ success: false, message: "Incorrect credentials."});
@@ -51,7 +51,7 @@ router.post('/signin', async (req, res) => {
     const default_image = "uploads/default.jpg";
 
     if (username && hashed_password){
-        db.promise().query('INSERT INTO users (username, password_hash, profile_image) VALUES (?, ?, ?)', [username, hashed_password, default_image])
+        db.query('INSERT INTO users (username, password_hash, profile_image) VALUES (?, ?, ?)', [username, hashed_password, default_image])
         .then(() => res.json({ success: true, message: "User created successfully!"}))
         .catch(err => {
             if (err.code === 'ER_DUP_ENTRY') {
@@ -93,7 +93,7 @@ router.get('/me', async (req, res) => {
             });
         });
 
-        const [rows] = await db.promise().query("SELECT id, username, profile_image FROM users WHERE id = ?", [decoded.id]);
+        const [rows] = await db.query("SELECT id, username, profile_image FROM users WHERE id = ?", [decoded.id]);
 
         if (rows.length === 0) {
             return res.json({ success: false, message: "User not found" });

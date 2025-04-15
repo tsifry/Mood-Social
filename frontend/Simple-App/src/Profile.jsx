@@ -161,6 +161,7 @@ function Profile() {
         } 
     }
 
+    //Image posting
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
 

@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
 
     if (!searchQuery) return res.json([]);
 
-    const [users] = await db.promise().query('SELECT username, profile_image FROM users WHERE username LIKE ? LIMIT 10', [`%${searchQuery}%`])
+    const [users] = await db.query('SELECT username, profile_image FROM users WHERE username LIKE ? LIMIT 10', [`%${searchQuery}%`])
 
     if (users.length === 0) return res.json([]);
 
@@ -29,7 +29,7 @@ router.post('/follow', middleware.verifyToken, async (req, res) => {
         res.json({success: false})
     } 
     
-    db.promise().query('INSERT INTO follows (follower_id, followed_id) VALUES (?, ?)', [userID, profile_id])
+    db.query('INSERT INTO follows (follower_id, followed_id) VALUES (?, ?)', [userID, profile_id])
         .then(() => res.json({ success: true }))
         .catch(err => {
             console.log(err);
@@ -42,43 +42,52 @@ router.get('/follow/:profile', async (req, res) => {
     const profile = req.params.profile;
     const token = req.cookies?.token; // optional chaining to avoid crashing
 
-    const profile_id = await middleware.getUserIdFromUsername(profile);
-    
-    if (!profile_id) {
-        return res.json({ success: false, message: "User not found" });
-    }
+    try {
+        // Get profile ID from username
+        const profile_id = await middleware.getUserIdFromUsername(profile);
 
-    const [imageResult] = await db.promise().query(
-        'SELECT profile_image FROM users WHERE id = ?',
-        [profile_id]
-    );
-
-    const image = imageResult[0];
-
-    // If no token, just return image
-    if (!token) {
-        return res.status(200).json({ success: false, message: 'Not logged in', pfp: image });
-    }
-
-    const decoded = middleware.decodeToken(token);
-    if (!decoded) {
-        return res.status(401).json({ success: false, message: 'Invalid token', pfp: image });
-    }
-
-    const userID = decoded.id;
-
-    db.query(
-        'SELECT followed_id FROM follows WHERE follower_id = ? AND followed_id = ?',
-        [userID, profile_id],
-        (err, results) => {
-            if (err) {
-                return res.status(500).json({ success: false, message: 'Database error.' });
-            }
-            const follows = results.length > 0;
-            return res.json({ success: true, follows, pfp: image });
+        if (!profile_id) {
+            return res.json({ success: false, message: "User not found" });
         }
-    );
+
+        // Get profile image for the user
+        const [imageResult] = await db.query(
+            'SELECT profile_image FROM users WHERE id = ?',
+            [profile_id]
+        );
+
+        const image = imageResult[0];
+
+        // If no token, just return image
+        if (!token) {
+            return res.status(200).json({ success: false, message: 'Not logged in', pfp: image });
+        }
+
+        // Decode token to get user ID
+        const decoded = middleware.decodeToken(token);
+
+        if (!decoded) {
+            return res.status(401).json({ success: false, message: 'Invalid token', pfp: image });
+        }
+
+        const userID = decoded.id;
+
+        // Check if the user follows the profile
+        const [followResults] = await db.query(
+            'SELECT followed_id FROM follows WHERE follower_id = ? AND followed_id = ?',
+            [userID, profile_id]
+        );
+
+        const follows = followResults.length > 0;
+
+        // Send the response with the follow status and profile image
+        return res.json({ success: true, follows, pfp: image });
+    } catch (err) {
+        console.error('Error:', err);
+        return res.status(500).json({ success: false, message: 'Database error' });
+    }
 });
+
 
 //unfollowing
 router.delete('/follow/:profile', middleware.verifyToken, async (req, res) => {
@@ -97,7 +106,7 @@ router.delete('/follow/:profile', middleware.verifyToken, async (req, res) => {
         }
         else{
            
-            await db.promise().query('DELETE FROM follows WHERE follower_id = ? AND followed_id = ?', [userID, profile_id]);
+            await db.query('DELETE FROM follows WHERE follower_id = ? AND followed_id = ?', [userID, profile_id]);
             res.status(200).json({ success: true, message: 'Post deleted successfully' });
         }
 

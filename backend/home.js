@@ -14,7 +14,7 @@ async function getProfileInfo(post) {
 
     profile_id = [...new Set(profile_id)]
 
-    const [user, fields] =  await db.promise().query('SELECT id, username, profile_image FROM users WHERE id IN (?)', [profile_id]);
+    const [user, fields] =  await db.query('SELECT id, username, profile_image FROM users WHERE id IN (?)', [profile_id]);
 
     return [user, post];
 }
@@ -22,7 +22,7 @@ async function getProfileInfo(post) {
 router.get('/', async (req, res) => {
   
     try {
-        const [results] = await db.promise().query('SELECT * FROM posts');
+        const [results] = await db.query('SELECT * FROM posts');
 
         const posts = await getProfileInfo(results);
 
