@@ -1,0 +1,142 @@
+const fs = require('fs');
+const path = require('path');
+const db = require('../database');
+const jwt = require('jsonwebtoken');
+const middleware = require('../middlweare');
+
+
+const CreatePost = async (song, quote, colorTheme, imagePath, user) => {
+
+    if (!song || !quote || !colorTheme || !imagePath || !user) {
+        return ({ success: false, message: "Missing fields" });
+    }
+
+    try {
+        await db.query(
+            'INSERT INTO posts (user_id, song_url, quote, image_url, colorTheme) VALUES (?, ?, ?, ?, ?)',
+            [user.id, song, quote, imagePath, colorTheme]
+        );
+        
+        return({ success: true });
+
+    } catch (err) {
+        console.error(err);
+        return({ success: false, message: "Database error" });
+    }
+};
+
+const RenderProfile = async (profile) => {
+
+    try {
+            const userId = await middleware.getUserIdFromUsername(profile);
+    
+            if (!userId) {
+                return ({ success: false, message: 'User not found' });
+            }
+    
+            const [results] = await db.query(
+                'SELECT song_url, quote, id, colorTheme, image_url FROM posts WHERE user_id = ? ORDER BY created_at DESC',
+                [userId]
+            );
+    
+            if(results.length === 0){
+                return ({ success: false, message: "User didnt post anything yet!"});
+            }
+
+            return { success: true, data: results };
+    
+    } catch (error) {
+        console.error(error);
+        return ({ success: false, message: 'Error retrieving posts' });
+    }
+};
+
+const DeletePosts = async (postId, userId) => {
+
+    try {
+        const [post] = await db.query('SELECT * FROM posts WHERE id = ?', [postId]);
+    
+        if (post.length === 0) {
+            return ({ success: false, message: 'Post not found' });
+        }
+    
+        if (post[0].user_id !== userId) {
+            return ({ success: false, message: 'Unauthorized to delete this post' });
+        }
+
+        const imagePath = post[0].image_url;
+
+        if (imagePath) {
+            const fullPath = path.resolve(__dirname, "..", imagePath);
+            fs.unlink(fullPath, (err) => {
+                if (err) {
+                    console.error('Failed to delete post image:', err);
+                }
+            });
+        }
+    
+        await db.query('DELETE FROM posts WHERE id = ?', [postId]);
+
+        return({ success: true, message: 'Post deleted successfully' });
+    
+    } catch (error) {
+        console.error(error);
+        return({ success: false, message: 'Error deleting post' });
+    }
+};
+
+const ChangeNickname = async (newUsername, userId) => {
+
+    if (!newUsername || newUsername.trim() === "") {
+        return ({ success: false, message: "Please enter a valid username." });
+    }
+    
+    try {
+        await db.query('UPDATE users SET username = ? WHERE id = ?', [newUsername, userId]);
+    
+        const user = { id: userId, username: newUsername };
+        const newToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+    
+        return({ success: true, message: "Username updated.", token: newToken });
+    
+    } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+            return ({ success: false, message: "Username already exists." });
+        }
+    
+        console.error(err);
+         return ({ success: false, message: "Database error" });
+    }
+};
+
+const UploadProfileImage = async (imagePath, userId) => {
+
+    try {
+        const [rows] = await db.query("SELECT profile_image FROM users WHERE id = ?", [userId]);
+    
+        const currentImage = rows[0]?.profile_image;
+    
+        if (currentImage && !currentImage.includes('default.jpg')) {
+            const fullPath = path.resolve(__dirname, "..", imagePath);
+            fs.unlink(fullPath, (err) => {
+                    if (err) console.error('Failed to delete old image:', err);
+            });
+        }
+    
+        await db.query("UPDATE users SET profile_image = ? WHERE id = ?", [imagePath, userId]);
+    
+        return({ success: true, imagePath });
+    
+    } catch (err) {
+        console.error(err);
+        return({ success: false, message: "Failed to upload image" });
+    }
+};
+
+module.exports = {
+    CreatePost,
+    RenderProfile,
+    DeletePosts,
+    ChangeNickname,
+    UploadProfileImage
+}

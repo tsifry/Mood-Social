@@ -17,18 +17,30 @@ async function getProfileInfo(post) {
     return [user, post];
 }
 
-const forYouPosts = async () => {
+const forYouPosts = async (filter, userId) => {
     
     try {
-        const [results] = await db.query('SELECT * FROM posts ORDER BY created_at DESC');
-    
-         const posts = await getProfileInfo(results);
-    
-        return posts;
+
+        let results;
+        
+        if (filter === "Following"){
+            [results] = await db.query(`SELECT p.* FROM posts p JOIN follows f ON p.user_id = f.followed_id WHERE f.follower_id = ? ORDER BY p.created_at DESC`, [userId]);
+
+            if (results.length === 0) {
+                return { success: false, message: "You don't follow any profiles yet!" };
+            }
+        }
+
+        else {
+            [results] = await db.query(`SELECT * FROM posts ORDER BY created_at DESC`);
+        }
+
+        const posts = await getProfileInfo(results);
+        return {success: true, posts};
     
         } catch (err) {
             console.error(err);
-            return("failed");
+            return { success: false, message: "Failed to fetch posts." };
         }  
 };
 
