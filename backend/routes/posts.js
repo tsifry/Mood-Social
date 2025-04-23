@@ -14,7 +14,7 @@ const upload = multer({ storage });
 const router = express.Router();
 
 router.post('/create', middleware.verifyToken, upload.single("image"), createPost);
-router.get('/:profile', renderPost);
+router.get('/', middleware.optionalAuth, renderPost);
 router.delete('/delete/:id', middleware.verifyToken, deletePosts);
 router.post('/username-change', middleware.verifyToken, changeNickname);
 router.post('/upload-profile', middleware.verifyToken, upload.single('image'), uploadProfileImage);

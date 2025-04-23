@@ -4,13 +4,17 @@ import { useAuth } from "./AuthProvider";
 import styles from "./css/Profile.module.css";
 
 
-function Posts ({ filter }) {
+function Posts ({ filter, profile }) {
 
     const navigate = useNavigate();
     const { user } = useAuth();
 
     const [posts, setPosts] = useState([]);
     const [message, setMessage] = useState('');
+
+    const queryParams = new URLSearchParams();
+    if (profile !== null) queryParams.append("profile", profile);
+    if (filter) queryParams.append("filter", filter);
 
     const navigateToUser = (user) => {
         navigate(`/${user}`);
@@ -43,7 +47,7 @@ function Posts ({ filter }) {
     //renders posts
     const fetchPosts = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/home?filter=${filter}`, {
+            const res = await fetch(`http://localhost:3000/posts?${queryParams.toString()}`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -54,8 +58,8 @@ function Posts ({ filter }) {
                 setPosts([]); // clear posts
             } else {
                 const [user, posts] = data;
-                setPosts(data); // maybe should be setPosts(posts)?
-                setMessage(""); // clear old message
+                setPosts(data); 
+                setMessage(""); 
             }
         } catch (error) {
             console.error('Error fetching posts:', error);
@@ -65,7 +69,7 @@ function Posts ({ filter }) {
     useEffect(() => {
         fetchPosts(); // call the named function
     
-    }, [filter, message]);
+    }, [filter, message, profile]);
     
     const colorThemes = {
         sunset: { user: "#432C51", post: "#F1B5C6" },
@@ -98,8 +102,31 @@ function Posts ({ filter }) {
         } catch (error) {
             console.log(error);
         }
-
     }
+
+    const handleDelete = async (postID) => {
+        const confirm = window.confirm("Are you sure you want to delete this post?");
+
+        if (confirm) {
+
+            try {
+                const response = await fetch(`http://localhost:3000/posts/delete/${postID}`, {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include'
+                })
+
+                if (response.status != 200){
+                    return alert(response.message);
+                }
+
+                setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postID));
+                alert('Post deleted successfully');
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    };
 
     return (<>
 
@@ -156,6 +183,10 @@ function Posts ({ filter }) {
                         {/* Post bottom */}
                         <div className={styles.captionBox} style={{ backgroundColor: theme.user }}>
                             <h1 className={styles.captionText}>{post.quote}</h1>
+
+                            {user.username === profile && (
+                                <button onClick={() => handleDelete(post.id)} className={styles.deleteButton}>Delete</button>
+                            )}
                         </div>
                         
                         {user && (<>
@@ -171,7 +202,7 @@ function Posts ({ filter }) {
             })}
         </div>
         <div>
-            {message}
+            <h2>{message}</h2>
         </div>  
     </>);
 

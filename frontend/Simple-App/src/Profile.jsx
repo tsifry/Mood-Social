@@ -1,25 +1,25 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
+import Posts from "./Posts";
 import Sidebar from "./Sidebar";
 import styles from "./css/Profile.module.css";
 
 function Profile() {
 
-    const [message , setMessage] = useState("");
     const [formData, setFormData] = useState({ song: "", quote: "", colorTheme: "", image: null });
     const [submittedData, setSubmittedData] = useState(null);
     const [song_type, setSongType] = useState("");
 
     const { user } = useAuth();
     const { profile } = useParams();
-    const navigate = useNavigate();
 
-    const [posts, setPosts] = useState([]);
     const [following, setFollow] = useState(false)
     const [pfp, setPfp] = useState(null);
 
     const [posting, setPosting] = useState(false)
+
+    const postFile = useRef(null);
 
     const colorThemes = {
         sunset: { user: "#432C51", post: "#F1B5C6" },
@@ -28,31 +28,6 @@ function Profile() {
         night: { user: "#1E1E2F", post: "#3A3A55" },
         peach: { user: "#4F2E2E", post: "#F7C59F" },
     };
-
-    const postFile = useRef(null);
-
-
-    // Render posts
-    useEffect(() => {
-
-        fetch(`http://localhost:3000/posts/${profile}`, {
-            method: "GET",
-            credentials: "include"
-        })
-        .then(res => {
-            return res.json();
-        })
-        .then(data => {
-            if (data.message){
-                setMessage(data.message);
-            } 
-            else {
-                setPosts(data);
-            }
-        })
-        .catch(error => console.error('Error fetching posts:', error));
-
-    }, [profile]);
 
     // Checks for followage and other stuff about profile
     useEffect(() => {
@@ -169,31 +144,6 @@ function Profile() {
         setFormData({ ...formData, image: file });
     }
 
-    // Handles deletion
-    const handleDelete = async (postID) => {
-        const confirm = window.confirm("Are you sure you want to delete this post?");
-
-        if (confirm) {
-
-            try {
-                const response = await fetch(`http://localhost:3000/posts/delete/${postID}`, {
-                    method: 'DELETE',
-                    headers: {'Content-Type': 'application/json'},
-                    credentials: 'include'
-                })
-
-                if (response.status != 200){
-                    return alert(response.message);
-                }
-
-                setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postID));
-                alert('Post deleted successfully');
-            } catch (error) {
-                console.log(error);
-            }
-        }
-    };
-
     // Handles following
     const follow = async () => {
         
@@ -269,10 +219,6 @@ function Profile() {
         setPosting(false);
     }
 
-    const navigateToUser = (user) => {
-        navigate(`/${user}`);
-    } 
-
     return (
         <div>
 
@@ -280,19 +226,17 @@ function Profile() {
                 <Sidebar></Sidebar>
             </div>
 
+            {/*Render up part of profile */}
             <div className={styles.user}>
 
                 {pfp && (
-                    <>
-                         <div>
-                            <img src={`http://localhost:3000/${pfp}`} alt="Profile"
-                                className="profile_image"></img>
-                        </div>
-
+                    <div className={styles.userInfo}>
+                        <img src={`http://localhost:3000/${pfp}`} alt="Profile" className="profile_image" />
                         <h1>{profile}</h1>
-                    </>
+                    </div>
                 )}
 
+                {/*Following button if in other profile */}
                 {user && user.username !== profile && pfp && (<>
                 
                     <> 
@@ -312,11 +256,13 @@ function Profile() {
 
             </div>
 
+            {/* This is just the stuff that appears to submit a new post. */}
             {posting && user.username === profile &&
             (<> <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
                         <button className={styles.closeButton} onClick={cancellPost}>✕</button>
 
+                        {/*Song input */}
                         <div className={styles.post_message}>
                             <h2>Song of the day.</h2>
                             <h3>Paste a soundcloud or Spotify song link</h3>
@@ -356,7 +302,8 @@ function Profile() {
                                 />
                             </>)}
                         </div>
-
+                        
+                        {/*Image input */}
                         <div>
                             <input
                                 type="file"
@@ -371,7 +318,8 @@ function Profile() {
                         </div>
 
                         <div className={styles.themePicker}>
-
+                            
+                            {/*Color input */}
                             <h2>Pick your color vibe</h2>
 
                             <div className={styles.themeOptions}>
@@ -392,7 +340,8 @@ function Profile() {
                                 ))}
                             </div>
                         </div>
-
+                        
+                        {/*Quote input */}
                         <div className={styles.post_message}>
 
                             <h2>Quote of the day</h2>
@@ -413,7 +362,8 @@ function Profile() {
                 </div>
             
             </>)}
-
+            
+            {/*Button to start posting*/}
             <div>
                 {user.username === profile && (
                     <div >
@@ -421,70 +371,10 @@ function Profile() {
                     </div>
                 )}
             </div>
-
-            <div className={styles.posts}>
-                {posts.map((post, index) => {
-                    const theme = colorThemes[post.colorTheme] || colorThemes["night"];
-                    const {url, type } = extractAudioEmbed(post.song_url);
-
-                    return (
-                        <div key={index} className={styles.post} style={{ backgroundColor: theme.post }}>
-
-                            <div className={styles.post_user} style={{ backgroundColor: theme.user, cursor: "pointer" }}
-                                 onClick={() => navigateToUser(profile)}>
-                                <img src={`http://localhost:3000/${pfp}`} className={styles.user_image} />
-                                <h1>{profile}</h1>
-                            </div>
-
-                            <div className={styles.playerWrapper}>
-
-                                {type === "spotify" && (
-                                    <iframe style={{ borderRadius: "12px" }}
-                                            src={`${url}?utm_source=generator&theme=0`}
-                                            width="100%"
-                                            height="240"
-                                            frameBorder="0"
-                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                            allowFullScreen
-                                            loading="lazy">
-                                    </iframe>
-                                )}
-
-                                {type === "soundcloud" && (
-                                   <iframe
-                                        width="100%"
-                                        height="152"
-                                        scrolling="no"
-                                        frameBorder="no"
-                                        allow="autoplay"
-                                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
-                                    ></iframe>
-                                )}
-
-                            </div>
-
-                            {post.image_url && (
-                                <div className={styles._image}>
-                                <img src={`http://localhost:3000/${post.image_url}`} className={styles._image} />
-                                </div>
-                            )}
-
-                            <div className={styles.captionBox} style={{ backgroundColor: theme.user }}>
-                                <h1 className={styles.captionText}>{post.quote}</h1>
-
-                                {user.username === profile && (
-                                    <button onClick={() => handleDelete(post.id)} className={styles.deleteButton}>Delete</button>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-                  
-            </div>
-
-            <div>
-                {message}
-            </div>
+            
+            {/*Posts render */}
+            <Posts filter={null} profile={profile}></Posts>
+            
         </div>
     );
 }

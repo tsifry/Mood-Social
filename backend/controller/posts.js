@@ -1,4 +1,4 @@
-const { CreatePost, RenderProfile, DeletePosts, ChangeNickname, UploadProfileImage, ToggleLikeService } = require('../services/posts')
+const { CreatePost, RenderPosts, DeletePosts, ChangeNickname, UploadProfileImage, ToggleLikeService } = require('../services/posts')
 
 const createPost = async (req, res) => {
 
@@ -17,9 +17,10 @@ const createPost = async (req, res) => {
 };
 
 const renderPost = async (req, res) => {
-    const { profile } = req.params;
+    const { profile, filter } = req.query;
+    const userId = req.user?.id;
 
-    const result = await RenderProfile(profile);
+    const result = await RenderPosts(filter, userId, profile);
 
     if (!result.success) {
         return res.status(400).json(result);

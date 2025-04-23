@@ -1,10 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-
 const authRoutes = require('./routes/auth');
 const postsRoutes = require('./routes/posts')
 const search = require('./search')
-const homeRoutes = require('./routes/home')
 
 const cookieParser = require("cookie-parser");
 const path = require('path');
@@ -18,7 +16,6 @@ app.use(cookieParser());
 app.use('/auth', authRoutes)
 app.use('/posts', postsRoutes)
 app.use('/search', search)
-app.use('/home', homeRoutes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.listen(3000)

@@ -5,6 +5,23 @@ const jwt = require('jsonwebtoken');
 const middleware = require('../middlweare');
 
 
+async function getProfileInfo(post) {
+
+    let profile_id = [];
+    const post_info = [];
+
+    for (let i = 0; i < post.length; i++){
+        profile_id.push(post[i].user_id);
+    }
+
+    profile_id = [...new Set(profile_id)]
+
+    const [user] =  await db.query(
+        'SELECT id, username, profile_image FROM users WHERE id IN (?)', [profile_id]);
+
+    return [user, post];
+}
+
 const CreatePost = async (song, quote, colorTheme, imagePath, user) => {
 
     if (!song || !quote || !colorTheme || !imagePath || !user) {
@@ -25,25 +42,51 @@ const CreatePost = async (song, quote, colorTheme, imagePath, user) => {
     }
 };
 
-const RenderProfile = async (profile) => {
+const RenderPosts = async (filter, userId, profile) => {
 
     try {
-            const userId = await middleware.getUserIdFromUsername(profile);
-    
-            if (!userId) {
-                return ({ success: false, message: 'User not found' });
-            }
-    
-            const [results] = await db.query(
-                'SELECT song_url, quote, id, colorTheme, image_url FROM posts WHERE user_id = ? ORDER BY created_at DESC',
-                [userId]
-            );
-    
-            if(results.length === 0){
-                return ({ success: false, message: "User didnt post anything yet!"});
+            const ProfileId = await middleware.getUserIdFromUsername(profile);
+            let results;
+
+            //So, if the render posts are from a PROFILE:
+            if (profile){
+
+                if (!ProfileId) {
+                    return ({ success: false, message: 'User not found' });
+                }
+
+                [results] = await db.query(
+                    'SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC',
+                    [ProfileId]
+                );
+
+                if(results.length === 0){
+                    return ({ success: false, message: "User didnt post anything yet!"});
+                }
+
             }
 
-            return { success: true, data: results };
+            //If posts are in the HOME PAGE, but in the FOLLOWING filter:
+            else if (filter === "Following"){
+
+                if(!userId){
+                    
+                }
+
+                [results] = await db.query(`SELECT p.* FROM posts p JOIN follows f ON p.user_id = f.followed_id WHERE f.follower_id = ? ORDER BY p.created_at DESC`, [userId]);
+            
+                if (results.length === 0) {
+                    return { success: false, message: "You don't follow any profiles yet!" };
+                }
+            }
+
+            else {
+                [results] = await db.query(`SELECT * FROM posts ORDER BY created_at DESC`);
+            }
+
+            
+            const posts = await getProfileInfo(results);
+            return { success: true, data: posts };
     
     } catch (error) {
         console.error(error);
@@ -177,7 +220,7 @@ const ToggleLikeService = async (post_id, user_id) => {
 
 module.exports = {
     CreatePost,
-    RenderProfile,
+    RenderPosts,
     DeletePosts,
     ChangeNickname,
     UploadProfileImage,

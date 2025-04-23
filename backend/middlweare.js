@@ -32,7 +32,6 @@ function verifyToken(req, res, next) {
     }
 }
 
-//This is for home page, where user can or not be logged in.
 function optionalAuth(req, res, next) {
     const token = req.cookies.token;
 

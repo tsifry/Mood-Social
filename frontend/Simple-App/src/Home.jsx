@@ -61,7 +61,7 @@ function Home (){
                     
                 </div>
 
-                <Posts filter={filter}></Posts>
+                <Posts filter={filter} profile={null}></Posts>
 
             </div>
         </>
