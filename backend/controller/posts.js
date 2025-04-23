@@ -1,4 +1,4 @@
-const { CreatePost, RenderProfile, DeletePosts, ChangeNickname, UploadProfileImage } = require('../services/posts')
+const { CreatePost, RenderProfile, DeletePosts, ChangeNickname, UploadProfileImage, ToggleLikeService } = require('../services/posts')
 
 const createPost = async (req, res) => {
 
@@ -70,10 +70,28 @@ const uploadProfileImage = async (req, res) => {
     res.json(result);
 };
 
+const toggleLikeController = async (req, res) => {
+    const { post_id } = req.body;
+    const user = req.user;
+
+    if (!post_id || !user) {
+        return res.status(400).json({ success: false, message: 'Missing post_id or user' });
+    }
+
+    const result = await ToggleLikeService(post_id, user.id);
+
+    if (!result.success) {
+        return res.status(400).json(result);
+    }
+
+    res.json(result);
+};
+
 module.exports = {
     createPost,
     renderPost,
     deletePosts,
     changeNickname,
-    uploadProfileImage
+    uploadProfileImage,
+    toggleLikeController
 };

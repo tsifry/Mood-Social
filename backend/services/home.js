@@ -1,4 +1,5 @@
 const db = require('../database');
+const middleware = require('../middlweare');
 
 async function getProfileInfo(post) {
 
@@ -29,6 +30,25 @@ const forYouPosts = async (filter, userId) => {
             if (results.length === 0) {
                 return { success: false, message: "You don't follow any profiles yet!" };
             }
+        }
+
+        else if (filter === "Profile"){
+
+            const userId = await middleware.getUserIdFromUsername(profile);
+                
+            if (!userId) {
+                return ({ success: false, message: 'User not found' });
+            }
+                
+            [results] = await db.query(
+                'SELECT song_url, quote, id, colorTheme, image_url, like_count FROM posts WHERE user_id = ? ORDER BY created_at DESC',
+                [userId]
+            );
+                
+            if(results.length === 0){
+                return ({ success: false, message: "User didnt post anything yet!"});
+            }
+
         }
 
         else {

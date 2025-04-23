@@ -1,6 +1,6 @@
 const express = require("express")
 
-const { createPost, renderPost, deletePosts, changeNickname, uploadProfileImage } = require("../controller/posts")
+const { createPost, renderPost, deletePosts, changeNickname, uploadProfileImage, toggleLikeController } = require("../controller/posts")
 const middleware = require('../middlweare');
 const multer = require('multer');
 
@@ -18,6 +18,7 @@ router.get('/:profile', renderPost);
 router.delete('/delete/:id', middleware.verifyToken, deletePosts);
 router.post('/username-change', middleware.verifyToken, changeNickname);
 router.post('/upload-profile', middleware.verifyToken, upload.single('image'), uploadProfileImage);
+router.post('/toggleLike', middleware.verifyToken, toggleLikeController);
 
 
 module.exports = router;

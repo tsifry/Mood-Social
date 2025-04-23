@@ -133,10 +133,53 @@ const UploadProfileImage = async (imagePath, userId) => {
     }
 };
 
+const ToggleLikeService = async (post_id, user_id) => {
+    try {
+        // Check if already liked
+        const [existing] = await db.query(
+            'SELECT * FROM likes WHERE post_id = ? AND user_id = ?',
+            [post_id, user_id]
+        );
+
+        if (existing.length > 0) {
+            // Dislike (remove like)
+            await db.query(
+                'DELETE FROM likes WHERE post_id = ? AND user_id = ?',
+                [post_id, user_id]
+            );
+
+            await db.query(
+                'UPDATE posts SET like_count = like_count - 1 WHERE id = ?',
+                [post_id]
+            );
+
+            return { success: true, liked: false };
+        } else {
+            // Like
+            await db.query(
+                'INSERT INTO likes (post_id, user_id) VALUES (?, ?)',
+                [post_id, user_id]
+            );
+
+            await db.query(
+                'UPDATE posts SET like_count = like_count + 1 WHERE id = ?',
+                [post_id]
+            );
+
+            return { success: true, liked: true };
+        }
+
+    } catch (err) {
+        console.error(err);
+        return { success: false, message: 'Database error' };
+    }
+};
+
 module.exports = {
     CreatePost,
     RenderProfile,
     DeletePosts,
     ChangeNickname,
-    UploadProfileImage
+    UploadProfileImage,
+    ToggleLikeService
 }

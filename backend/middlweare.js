@@ -32,6 +32,26 @@ function verifyToken(req, res, next) {
     }
 }
 
+//This is for home page, where user can or not be logged in.
+function optionalAuth(req, res, next) {
+    const token = req.cookies.token;
+
+    if (!token) {
+        req.user = null;
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        req.user = decoded; // Payload: { id, username }
+        return next();
+        
+    } catch (err) {
+        return next();
+    }
+
+}
+
 // Decode token manually (non-middleware use)
 function decodeToken(token) {
     try {
@@ -44,5 +64,6 @@ function decodeToken(token) {
 module.exports = {
     getUserIdFromUsername,
     verifyToken,
+    optionalAuth,
     decodeToken
 };

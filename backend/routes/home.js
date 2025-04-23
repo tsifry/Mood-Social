@@ -4,6 +4,6 @@ const { getHomeFeed } = require("../controller/home.js");
 
 const router = express.Router();
 
-router.get('/', middleware.verifyToken, getHomeFeed);
+router.get('/', middleware.optionalAuth, getHomeFeed);
 
 module.exports = router;
