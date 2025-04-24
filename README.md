@@ -25,7 +25,8 @@ Esse projeto foi desenvolvido com foco em práticas modernas de **desenvolviment
 - Feed Geral
 
 🗑️ **Gerenciamento de Postagens**  
-- Criar, visualizar e deletar publicações  
+- Criar, visualizar, reportar e deletar publicações
+- Likes
 ---
 
 ## 🧰 Tecnologias Utilizadas
@@ -55,9 +56,6 @@ Esse projeto foi desenvolvido com foco em práticas modernas de **desenvolviment
 
 ## 🧠 Melhorias Futuras
 
-- Limitar postagens para **uma por dia**
-- Curtidas e favoritos
-- Sistema de amigos mais completo
 - Design responsivo para celular
 - Suporte completo ao Docker
 
