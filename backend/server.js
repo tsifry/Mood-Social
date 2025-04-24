@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const authRoutes = require('./routes/auth');
 const postsRoutes = require('./routes/posts')
-const search = require('./search')
+const search = require('./routes/search')
 
 const cookieParser = require("cookie-parser");
 const path = require('path');

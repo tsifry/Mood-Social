@@ -1,8 +1,7 @@
 const express = require("express")
-
-const { createPost, renderPost, deletePosts, changeNickname, uploadProfileImage, toggleLikeController } = require("../controller/posts")
 const middleware = require('../middlweare');
 const multer = require('multer');
+const { createPost, renderPost, deletePosts, changeNickname, uploadProfileImage, toggleLikeController } = require("../controller/posts")
 
 
 const storage = multer.diskStorage({
