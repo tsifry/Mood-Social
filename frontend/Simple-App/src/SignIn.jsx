@@ -52,6 +52,8 @@ function SignIn(){
                         placeholder="Enter a Username"
                         required
                         value={username}
+                        maxLength={20}
+                        minLength={3}
                         onChange={(e) => setUsername(e.target.value)}
                     />
                 </label>
@@ -64,6 +66,8 @@ function SignIn(){
                         placeholder="Enter a Password"
                         required
                         value={password}
+                        maxLength={64}
+                        minLength={8}
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </label>

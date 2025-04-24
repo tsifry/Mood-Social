@@ -126,7 +126,7 @@ function Profile() {
                     alert("Post send.");
                 }
                 else{
-                    alert("Could not post.");  
+                    alert(data.message);  
                 }
 
             } catch (error) {
@@ -351,7 +351,8 @@ function Profile() {
                                 <input value={formData.quote}
                                        name="quote"
                                        onChange={handleChange}
-                                       onKeyDown={handleQuoteSubmit}></input>
+                                       onKeyDown={handleQuoteSubmit}
+                                       maxLength={250}></input>
 
                         <div>
                             

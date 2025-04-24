@@ -117,7 +117,9 @@ function Settings() {
 
                             <input placeholder="Change username."
                                    onChange={(e) => setUsername(e.target.value)}
-                                   className={styles.input}></input>
+                                   className={styles.input}
+                                   maxLength={20}
+                                   minLength={3}></input>
 
                             <button className={styles.upload_button}>Ok</button>
                         </form>

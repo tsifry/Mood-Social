@@ -3,6 +3,21 @@ const { CheckAuth, Signin, Authentication } = require('../services/auth')
 const login = async (req, res) => {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required." });
+    }
+
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+        return res.status(400).json({ message: "Username must be between 3 and 20 characters." });
+    }
+
+    if (trimmedPassword.length === 0 || trimmedPassword.length > 64) {
+        return res.status(400).json({ message: "Password must be between 8 and 64 characters." });
+    }
+
     try {
         const result = await CheckAuth(username, password);
 
@@ -35,6 +50,21 @@ const logout = async (req, res) => {
 
 const signin = async (req, res) => {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required." });
+    }
+
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+        return res.status(400).json({ message: "Username must be between 3 and 20 characters." });
+    }
+
+    if (trimmedPassword.length < 8 || trimmedPassword.length > 64) {
+        return res.status(400).json({ message: "Password must be between 8 and 64 characters." });
+    }
 
     try {
 

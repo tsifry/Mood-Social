@@ -1,7 +1,7 @@
 const express = require("express")
 const middleware = require('../middlweare');
 const multer = require('multer');
-const { createPost, renderPost, deletePosts, changeNickname, uploadProfileImage, toggleLikeController } = require("../controller/posts")
+const { createPost, renderPost, deletePosts, changeNickname, uploadProfileImage, toggleLikeController, report } = require("../controller/posts")
 
 
 const storage = multer.diskStorage({
@@ -18,6 +18,7 @@ router.delete('/delete/:id', middleware.verifyToken, deletePosts);
 router.post('/username-change', middleware.verifyToken, changeNickname);
 router.post('/upload-profile', middleware.verifyToken, upload.single('image'), uploadProfileImage);
 router.post('/toggleLike', middleware.verifyToken, toggleLikeController);
+router.post('/report', middleware.verifyToken, report);
 
 
 module.exports = router;

@@ -58,6 +58,8 @@ function Login(){
                             required
                             className={styles.input}
                             value={username}
+                            maxLength={20}
+                            minLength={3}
                             onChange={(e) => {setUserame(e.target.value)}}></input>
                     </label>
 
@@ -68,6 +70,8 @@ function Login(){
                             required
                             className={styles.input}
                             value={password}
+                            maxLength={64}
+                            minLength={0}
                             onChange={(e) => {setPassword(e.target.value)}}></input>
                     </label>
 

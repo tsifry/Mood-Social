@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider";
 import styles from "./css/Profile.module.css";
+import ReportInput from "./ReportInput";
 
 
 function Posts ({ filter, profile }) {
@@ -11,6 +12,7 @@ function Posts ({ filter, profile }) {
 
     const [posts, setPosts] = useState([]);
     const [message, setMessage] = useState('');
+    const [reporting, setReporting] = useState(false);
 
     const queryParams = new URLSearchParams();
     if (profile !== null) queryParams.append("profile", profile);
@@ -193,9 +195,16 @@ function Posts ({ filter, profile }) {
                             <div className={styles.likeAndReport}>
                                 <button onClick={() => like(post.id)}>❤️</button>   
                                 <h3>{post.like_count}</h3>
-                                <button>🚩</button>
+                                <button onClick={() => setReporting(true)}>🚩</button>
                             </div>
                         </>)}
+
+                        {reporting && (
+                            <div className={styles.reportInput}>
+                                <ReportInput postId={post.id} />
+                                <button onClick={() => setReporting(false)}>Close</button>
+                            </div>
+                        )}
 
                     </div>
                 );

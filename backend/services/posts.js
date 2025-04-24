@@ -22,6 +22,28 @@ async function getProfileInfo(post) {
     return [user, post];
 }
 
+const CanUserPost = async (userId) => {
+    const [lastPost] = await db.query(
+        'SELECT created_at FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
+        [userId]
+    );
+
+    if (lastPost.length === 0) return { allowed: true };
+
+    const lastPostTime = new Date(lastPost[0].created_at);
+    const now = new Date();
+    const diffInHours = (now - lastPostTime) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+        return {
+            allowed: false,
+            timeLeft: 24 - diffInHours,
+        };
+    }
+
+    return { allowed: true };
+};
+
 const CreatePost = async (song, quote, colorTheme, imagePath, user) => {
 
     if (!song || !quote || !colorTheme || !imagePath || !user) {
@@ -218,11 +240,35 @@ const ToggleLikeService = async (post_id, user_id) => {
     }
 };
 
+const Report = async (postId, userId, message) => {
+    try {
+        const [post] = await db.query('SELECT * FROM posts WHERE id = ?', [postId]);
+    
+        if (post.length === 0) {
+            return ({ success: false, message: 'Post not found' });
+        }
+    
+        if (post[0].user_id === userId) {
+            return ({ success: false, message: 'You cannot report your own post' });
+        }
+    
+        await db.query('INSERT INTO reports (post_id, user_id, message) VALUES (?, ?, ?)', [postId, userId, message]);
+    
+        return({ success: true, message: 'Post reported successfully' });
+    
+    } catch (error) {
+        console.error(error);
+        return({ success: false, message: 'Error reporting post' });
+    }
+};
+
 module.exports = {
     CreatePost,
     RenderPosts,
     DeletePosts,
     ChangeNickname,
     UploadProfileImage,
-    ToggleLikeService
+    ToggleLikeService,
+    Report,
+    CanUserPost
 }
