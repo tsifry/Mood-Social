@@ -8,7 +8,6 @@ import styles from "./css/Profile.module.css";
 function Profile() {
 
     const [formData, setFormData] = useState({ song: "", quote: "", colorTheme: "", image: null });
-    const [submittedData, setSubmittedData] = useState(null);
     const [song_type, setSongType] = useState("");
 
     const { user } = useAuth();
@@ -55,22 +54,16 @@ function Profile() {
 
     // Handles input change
     const handleChange = (e) => {
-        setFormData({...formData, [e.target.name]: e.target.value})   
-    }
-
-    //Handles input submition
-    const handleSongSubmit = (e) => {
-        if (e.key === "Enter") {
-          setSubmittedData({ ...submittedData, song: formData.song });
-          setSongType(extractAudioEmbed(submittedData.song).type);
+        const { name, value } = e.target;
+        const updatedForm = { ...formData, [name]: value };
+        setFormData(updatedForm);
+    
+        // If changing the song, update the song type
+        if (name === "song") {
+            const embed = extractAudioEmbed(value);
+            setSongType(embed.type);
         }
     };
-
-    const handleQuoteSubmit = (e) => {
-        if (e.key === "Enter") {
-            setSubmittedData({ ...formData, quote: formData.quote });
-        }
-    }
 
     //Regex for links
     const extractAudioEmbed = (input) => {
@@ -99,42 +92,36 @@ function Profile() {
     // Handles posting
     const handlePost = async (e) => {
         e.preventDefault();
-
-        setSubmittedData({ ...formData, quote: formData.quote, colorTheme: formData.colorTheme, image: formData.image });
-
+    
         const formDataToSend = new FormData();
-
-        formDataToSend.append("song", submittedData.song);
-        formDataToSend.append("quote", submittedData.quote);
-        formDataToSend.append("colorTheme", submittedData.colorTheme);
-        formDataToSend.append("image", submittedData.image); // ✅ this is the actual file
-
-
-        if (submittedData.song && submittedData.quote && submittedData.colorTheme && submittedData.image) {
-
+        formDataToSend.append("song", formData.song);
+        formDataToSend.append("quote", formData.quote);
+        formDataToSend.append("colorTheme", formData.colorTheme);
+        formDataToSend.append("image", formData.image);
+    
+        if (formData.song && formData.quote && formData.colorTheme && formData.image) {
             try {
                 const response = await fetch("http://localhost:3000/posts/create", {
                     method: "POST",
                     credentials: "include",
                     body: formDataToSend
                 });
-
+    
                 const data = await response.json();
-
-                if(data.success){
+    
+                if (data.success) {
                     window.location.reload();
-                    alert("Post send.");
-                }
-                else{
+                    alert("Post sent.");
+                } else {
                     alert(data.message);  
                 }
-
+    
             } catch (error) {
-                alert("Error Connecting to Server")
-                console.log(error)
+                alert("Error Connecting to Server");
+                console.log(error);
             }
         } 
-    }
+    };
 
     //Image posting
     const handleImageUpload = async (e) => {
@@ -214,7 +201,7 @@ function Profile() {
     //Handles post cancel
     const cancellPost = () => {
         setFormData({ song: "", quote: "", colorTheme: "", image: null });
-        setSubmittedData(null);
+        setFormData(null);
         setSongType("");
         setPosting(false);
     }
@@ -273,7 +260,7 @@ function Profile() {
                                    name="song"
                                    value={formData.song}
                                    onChange={handleChange}
-                                   onKeyDown={handleSongSubmit}></input>
+                                   ></input>
                             
                         </div>
                            
@@ -281,7 +268,7 @@ function Profile() {
                             {song_type === "spotify" && (<>
                                 <iframe
                                     style={{ borderRadius: "12px" }}
-                                    src={`${extractAudioEmbed(submittedData.song).url}?utm_source=generator&theme=0`}
+                                    src={`${extractAudioEmbed(formData.song).url}?utm_source=generator&theme=0`}
                                     width="100%"
                                     height="150"
                                     frameBorder="0"
@@ -297,7 +284,7 @@ function Profile() {
                                     scrolling="no"
                                     frameBorder="no"
                                     allow="autoplay"
-                                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(submittedData.song)}
+                                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(formData.song)}
                                     &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
                                 />
                             </>)}
@@ -351,7 +338,6 @@ function Profile() {
                                 <input value={formData.quote}
                                        name="quote"
                                        onChange={handleChange}
-                                       onKeyDown={handleQuoteSubmit}
                                        maxLength={250}></input>
 
                         <div>

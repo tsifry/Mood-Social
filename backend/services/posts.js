@@ -19,6 +19,7 @@ async function getProfileInfo(post) {
     const [user] =  await db.query(
         'SELECT id, username, profile_image FROM users WHERE id IN (?)', [profile_id]);
 
+
     return [user, post];
 }
 
@@ -64,7 +65,7 @@ const CreatePost = async (song, quote, colorTheme, imagePath, user) => {
     }
 };
 
-const RenderPosts = async (filter, userId, profile) => {
+const RenderPosts = async (filter, userId, profile, page) => {
 
     try {
             const ProfileId = await middleware.getUserIdFromUsername(profile);
@@ -103,7 +104,16 @@ const RenderPosts = async (filter, userId, profile) => {
             }
 
             else {
-                [results] = await db.query(`SELECT * FROM posts ORDER BY created_at DESC`);
+
+                const pageSize = 10;
+                const offset = (page - 1) * pageSize;
+
+                [results] = await db.query(
+                    `SELECT * FROM posts
+                     ORDER BY LOG10(GREATEST(like_count, 1)) + (UNIX_TIMESTAMP(created_at) / 45000) DESC
+                     LIMIT ? OFFSET ?`,
+                    [pageSize, offset]
+                  );
             }
 
             

@@ -12,12 +12,12 @@ const createPost = async (req, res) => {
 
     const { allowed, timeLeft } = await CanUserPost(user.id);
 
-    if (!allowed) {
-        return res.status(400).json({ success: false, message: `You can only post every 24 hours. Please wait ${Math.ceil(timeLeft)} Hours.` });
-    }
+    //if (!allowed) {
+        //return res.status(400).json({ success: false, message: `You can only post every 24 hours. Please wait ${Math.ceil(timeLeft)} Hours.` });
+    //}
 
     const result = await CreatePost(song, quote, colorTheme, imagePath, user);
-
+    
     if (!result.success) {
         return res.status(400).json(result);
     }
@@ -27,10 +27,10 @@ const createPost = async (req, res) => {
 };
 
 const renderPost = async (req, res) => {
-    const { profile, filter } = req.query;
+    const { profile, filter, page } = req.query;
     const userId = req.user?.id;
 
-    const result = await RenderPosts(filter, userId, profile);
+    const result = await RenderPosts(filter, userId, profile, page);
 
     if (!result.success) {
         return res.status(400).json(result);

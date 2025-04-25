@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider";
+import LazyEmbed from "./LazyEmbed";
 import styles from "./css/Profile.module.css";
 import ReportInput from "./ReportInput";
 
@@ -10,13 +11,17 @@ function Posts ({ filter, profile }) {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    const [liked, setLiked] = useState(false);
     const [posts, setPosts] = useState([]);
     const [message, setMessage] = useState('');
     const [reporting, setReporting] = useState(false);
 
+    const [page, setPage] = useState(1);
+
     const queryParams = new URLSearchParams();
     if (profile !== null) queryParams.append("profile", profile);
     if (filter) queryParams.append("filter", filter);
+    queryParams.append("page", page);
 
     const navigateToUser = (user) => {
         navigate(`/${user}`);
@@ -47,7 +52,7 @@ function Posts ({ filter, profile }) {
     };
 
     //renders posts
-    const fetchPosts = async () => {
+    const fetchPosts = async (page) => {
         try {
             const res = await fetch(`http://localhost:3000/posts?${queryParams.toString()}`, {
                 method: "GET",
@@ -69,7 +74,7 @@ function Posts ({ filter, profile }) {
     };
     
     useEffect(() => {
-        fetchPosts(); // call the named function
+        fetchPosts(page); // call the named function
     
     }, [filter, message, profile]);
     
@@ -83,6 +88,8 @@ function Posts ({ filter, profile }) {
 
     //handles liking posts
     const like = async (post_id) => {
+
+        setLiked(!liked);
 
         try {
             
@@ -105,7 +112,8 @@ function Posts ({ filter, profile }) {
             console.log(error);
         }
     }
-
+    
+    //Handles deleting posts
     const handleDelete = async (postID) => {
         const confirm = window.confirm("Are you sure you want to delete this post?");
 
@@ -124,6 +132,7 @@ function Posts ({ filter, profile }) {
 
                 setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postID));
                 alert('Post deleted successfully');
+                window.location.reload();
             } catch (error) {
                 console.log(error);
             }
@@ -149,33 +158,12 @@ function Posts ({ filter, profile }) {
                             <h1>{post_user?.username}</h1>
                         </div>
 
-                        {/* post itself */}
+                        {/* Embeds */}
                         <div className={styles.playerWrapper}>
-                            {type === "spotify" && (
-                                <iframe
-                                    style={{ borderRadius: "12px" }}
-                                    src={`${url}?utm_source=generator&theme=0`}
-                                    width="100%"
-                                    height="240"
-                                    frameBorder="0"
-                                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                    allowFullScreen
-                                    loading="lazy"
-                                ></iframe>
-                            )}
-        
-                            {type === "soundcloud" && (
-                                <iframe
-                                    width="100%"
-                                    height="152"
-                                    scrolling="no"
-                                    frameBorder="no"
-                                    allow="autoplay"
-                                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
-                                ></iframe>
-                                            )}
+                            <LazyEmbed type={type} url={url} />
                         </div>
-        
+                    
+                        {/* Image */}
                         {post.image_url && (
                             <div className={styles._image}>
                                 <img src={`http://localhost:3000/${post.image_url}`} className={styles._image} />
@@ -191,14 +179,16 @@ function Posts ({ filter, profile }) {
                             )}
                         </div>
                         
+                        {/* Likes and report button */}
                         {user && (<>
                             <div className={styles.likeAndReport}>
-                                <button onClick={() => like(post.id)}>❤️</button>   
-                                <h3>{post.like_count}</h3>
-                                <button onClick={() => setReporting(true)}>🚩</button>
+                                <button onClick={() => like(post.id)} className={`${styles.likeButton}`}>s2</button>   
+                                <h3 className={styles.likeCounter}>{post.like_count}</h3>
+                                <button onClick={() => setReporting(true)}className={styles.reportButton}>🚩</button>
                             </div>
                         </>)}
 
+                        {/* Reporting */}
                         {reporting && (
                             <div className={styles.reportInput}>
                                 <ReportInput postId={post.id} />

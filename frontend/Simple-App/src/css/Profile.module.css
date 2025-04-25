@@ -1,3 +1,9 @@
+.postsContainer {
+    height: 100vh; 
+    overflow: hidden;
+
+  }
+
 .user {
     display: flex;
     justify-content: space-between; /* push children to edges */
@@ -83,6 +89,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0 16px; /* adds space on the left and right sides */
+    align-items: center;
 }
 
 .post_user:hover{
@@ -368,4 +375,64 @@
     display: block;
 }
   
-  
+/* Wrapper for like button and report button */
+.likeAndReport {
+    display: flex;
+    justify-content: flex-start;  /* Align the buttons from left to right */
+    align-items: center;  /* Vertically center the content */
+    padding: 0 16px;  /* Horizontal padding */
+}
+
+/* Style for the like button */
+.likeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;  /* Size of the heart */
+    color: #000000;  /* Default color for the heart */
+    transition: color 0.2s ease-in-out;  /* Smooth color transition */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Hover effect for the like button */
+.likeButton:hover {
+    color: #ff1493;  /* Change to pink when hovering */
+}
+
+/* Apply when the heart is "liked" */
+.liked {
+    color: #f00;  /* Red color when liked */
+}
+
+/* Active effect for the like button */
+.likeButton:active {
+    transform: scale(1.2);  /* Scale up when clicked */
+    transition: transform 0.1s;  /* Smooth scaling transition */
+}
+
+/* Style for the like counter */
+.likeCounter {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    color: #000000;  /* Dark color for the like count */
+    margin-left: 8px;  /* Space between the heart and the like count */
+    display: inline-block;
+}
+
+/* Style for the report button */
+.reportButton {
+    margin-left: 570px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;  /* Size of the flag */
+    color: #999;  /* Default color for the report button */
+    transition: color 0.2s ease-in-out;  /* Smooth color transition */
+}
+
+/* Hover effect for the report button */
+.reportButton:hover {
+    color: #ff0000;  
+}
