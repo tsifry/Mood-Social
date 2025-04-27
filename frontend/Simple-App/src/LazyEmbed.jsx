@@ -14,7 +14,7 @@ export default function LazyEmbed({ type, url }) {
           }
         });
       },
-      { threshold: 0.1 } 
+      { threshold: 0.9 } 
     );
 
     if (ref.current) {
@@ -29,7 +29,6 @@ export default function LazyEmbed({ type, url }) {
   }, []);
 
   if (!isVisible) {
-    {console.log("not visible")}
     return (
       <div
         ref={ref}
@@ -46,7 +45,6 @@ export default function LazyEmbed({ type, url }) {
 
   return (
     <div ref={ref}>
-      {console.log("visible")}
       {type === "spotify" ? (
         <iframe
           style={{ borderRadius: "12px" }}

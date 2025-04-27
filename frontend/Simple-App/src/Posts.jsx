@@ -16,12 +16,14 @@ function Posts ({ filter, profile }) {
     const [message, setMessage] = useState('');
     const [reporting, setReporting] = useState(false);
 
+    //infinite scroll rendering
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
 
     const queryParams = new URLSearchParams();
     if (profile !== null) queryParams.append("profile", profile);
     if (filter) queryParams.append("filter", filter);
-    queryParams.append("page", page);
 
     const navigateToUser = (user) => {
         navigate(`/${user}`);
@@ -53,31 +55,80 @@ function Posts ({ filter, profile }) {
 
     //renders posts
     const fetchPosts = async (page) => {
+
+        setLoading(true);
+        setMessage('Loading...');
+
         try {
+
+            queryParams.append("page", page);
+            console.log(queryParams.toString())
+
+            if (filter === "Following" && page === 1) {
+                setPosts([[], []]); // Clear the previous posts
+                setHasMore(true); // Reset hasMore to true
+            } else if (filter === "All posts" && page === 1) {
+                setPosts([[], []]); // Clear the previous posts 
+                setHasMore(true); // Reset hasMore to true
+            }
+
             const res = await fetch(`http://localhost:3000/posts?${queryParams.toString()}`, {
                 method: "GET",
                 credentials: "include"
             });
             const data = await res.json();
-
-            if (data.message) {
+    
+            if (data.success === false) {
                 setMessage(data.message);
-                setPosts([]); // clear posts
-            } else {
-                const [user, posts] = data;
-                setPosts(data); 
-                setMessage(""); 
+                setHasMore(false);
+                return
+            }
+
+            else {
+                const [users, newPosts] = data;
+
+                setPosts(prevPosts => {
+                    const [prevUsers, prevPostsData] = prevPosts.length ? prevPosts : [[], []];
+                    return [
+                        [...prevUsers, ...users],     
+                        [...prevPostsData, ...newPosts] 
+                    ];
+                });
+                setPage(prevPage => prevPage + 1);
+                console.log(page) 
+                setMessage('');
             }
         } catch (error) {
             console.error('Error fetching posts:', error);
+        } finally {
+            setLoading(false);
         }
     };
     
+    //Checks for filter changes
     useEffect(() => {
-        fetchPosts(page); // call the named function
-    
-    }, [filter, message, profile]);
-    
+        if (!filter) {
+            return
+        }
+        else if (filter === "Following") {
+            setPage(1); 
+            fetchPosts(1); 
+        } else if (filter === "All posts") {
+            setPage(1); 
+            fetchPosts(1);         }
+    },[filter]);
+
+    //Checks for Profile changes
+    useEffect(() => {
+        if (!profile) return; // If no profile is provided, do nothing
+
+        setPosts([[], []]);  
+        setPage(1);           
+        fetchPosts(1);
+        setHasMore(true); // Reset hasMore to true        
+    }, [profile]); 
+
+
     const colorThemes = {
         sunset: { user: "#432C51", post: "#F1B5C6" },
         ocean: { user: "#1B3B5F", post: "#A2D2FF" },
@@ -104,7 +155,7 @@ function Posts ({ filter, profile }) {
             })
             .then(data => {
                 if (data.success){
-                    fetchPosts(); 
+                    console.log(data); 
                 }
             })
 
@@ -139,6 +190,26 @@ function Posts ({ filter, profile }) {
         }
     };
 
+    //scroll rendering
+    useEffect(() => {
+        const handleScroll = () => {
+          const scrollTop = window.scrollY;
+          const windowHeight = window.innerHeight;
+          const fullHeight = document.documentElement.scrollHeight;
+      
+          if (scrollTop + windowHeight >= fullHeight - 10) {
+            if (!loading && hasMore) {
+              console.log("Loading more posts...");
+              setLoading(true); // prevent multiple triggers
+              fetchPosts(page);
+            }
+          }
+        };
+      
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading, hasMore, page]);
+      
     return (<>
 
         <div className={styles.posts}>
@@ -182,7 +253,7 @@ function Posts ({ filter, profile }) {
                         {/* Likes and report button */}
                         {user && (<>
                             <div className={styles.likeAndReport}>
-                                <button onClick={() => like(post.id)} className={`${styles.likeButton}`}>s2</button>   
+                                <button onClick={() => like(post.id)} className={`${styles.likeButton}`}>❤</button>   
                                 <h3 className={styles.likeCounter}>{post.like_count}</h3>
                                 <button onClick={() => setReporting(true)}className={styles.reportButton}>🚩</button>
                             </div>

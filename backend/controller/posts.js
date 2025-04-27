@@ -30,6 +30,7 @@ const renderPost = async (req, res) => {
     const { profile, filter, page } = req.query;
     const userId = req.user?.id;
 
+    console.log(filter, userId, profile, page);
     const result = await RenderPosts(filter, userId, profile, page);
 
     if (!result.success) {

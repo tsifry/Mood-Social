@@ -67,57 +67,76 @@ const CreatePost = async (song, quote, colorTheme, imagePath, user) => {
 
 const RenderPosts = async (filter, userId, profile, page) => {
 
-    try {
-            const ProfileId = await middleware.getUserIdFromUsername(profile);
+    try {   
             let results;
+
+            const pageSize = 3;
+            const offset = (page - 1) * pageSize;
+
+            console.log(filter, userId, profile, page);
 
             //So, if the render posts are from a PROFILE:
             if (profile){
+
+                const ProfileId = await middleware.getUserIdFromUsername(profile);
 
                 if (!ProfileId) {
                     return ({ success: false, message: 'User not found' });
                 }
 
                 [results] = await db.query(
-                    'SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC',
-                    [ProfileId]
+                    'SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+                    [ProfileId, pageSize, offset]
                 );
 
-                if(results.length === 0){
-                    return ({ success: false, message: "User didnt post anything yet!"});
+                if (results.length === 0) {
+                    if (+page === 1) {
+                        console.log("User didn't post anything yet");
+                        return { success: false, message: "User didn't post anything yet!" };
+                    } else {
+                        console.log("No more posts available");
+                        return { success: false, message: "No more posts available" };
+                    }
                 }
-
             }
 
             //If posts are in the HOME PAGE, but in the FOLLOWING filter:
             else if (filter === "Following"){
 
-                if(!userId){
-                    
+                if (!userId) {
+                    return ({ success: false, message: 'User not found' }); 
                 }
 
-                [results] = await db.query(`SELECT p.* FROM posts p JOIN follows f ON p.user_id = f.followed_id WHERE f.follower_id = ? ORDER BY p.created_at DESC`, [userId]);
-            
+                [results] = await db.query(`SELECT p.* FROM posts p JOIN follows f ON p.user_id = f.followed_id WHERE f.follower_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?`, [userId, pageSize, offset]);
+
                 if (results.length === 0) {
-                    return { success: false, message: "You don't follow any profiles yet!" };
-                }
+                    if(+page === 1) {
+                        console.log("You don't follow any profiles yet!");
+                        return { success: false, message: "You don't follow any profiles yet!" };
+                    } else {
+                        console.log("HAHAHHA");
+                        return { success: false, message: "No more posts available" };
+                    }
+                } 
+
             }
 
             else {
-
-                const pageSize = 10;
-                const offset = (page - 1) * pageSize;
 
                 [results] = await db.query(
                     `SELECT * FROM posts
                      ORDER BY LOG10(GREATEST(like_count, 1)) + (UNIX_TIMESTAMP(created_at) / 45000) DESC
                      LIMIT ? OFFSET ?`,
                     [pageSize, offset]
-                  );
+                );
+
+                if (results.length === 0) {
+                    return { success: false, message: "No more posts available" };
+                }
             }
 
-            
             const posts = await getProfileInfo(results);
+
             return { success: true, data: posts };
     
     } catch (error) {
