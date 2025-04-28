@@ -15,6 +15,8 @@ function Profile() {
 
     const [following, setFollow] = useState(false)
     const [pfp, setPfp] = useState(null);
+    const [postTimer, setPostTimer] = useState(null);
+    const [allowedToPost, setAllowedToPost] = useState(false);
 
     const [posting, setPosting] = useState(false)
 
@@ -40,6 +42,8 @@ function Profile() {
             if (data.success) {
                 setFollow(data.follows)
                 setPfp(data.pfp.profile_image)
+                setPostTimer(data.allowedToPost.timeLeft)
+                setAllowedToPost(data.allowedToPost.allowed)
             } else {
                 setFollow(false)
                 setPfp(data.pfp.profile_image)
@@ -50,7 +54,7 @@ function Profile() {
             setFollow(false);
         });
 
-    }, [following, profile, pfp]);
+    }, [following, profile, pfp, postTimer, allowedToPost]);
 
     // Handles input change
     const handleChange = (e) => {
@@ -353,8 +357,19 @@ function Profile() {
             {/*Button to start posting*/}
             <div>
                 {user.username === profile && (
-                    <div >
-                        <button onClick={() => setPosting(!posting)} className={styles.posting}>Post Today's mood</button>
+                    <div>
+                        <button
+                            onClick={() => allowedToPost && setPosting(!posting)}
+                            className={`${styles.posting} ${allowedToPost === false ? styles.disabled : ''}`}
+                            disabled={allowedToPost === false}
+                        >
+                            {allowedToPost === null
+                                ? "Loading..." 
+                                : allowedToPost
+                                    ? "Post"
+                                    : "You can post again in " + Math.ceil(postTimer) + " hours."
+                            }
+                        </button>
                     </div>
                 )}
             </div>

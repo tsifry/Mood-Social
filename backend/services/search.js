@@ -1,5 +1,5 @@
 const db = require('../database');
-const middleware = require('../middlweare')
+const middleware = require('../middlweare');
 
 const SearchBar = async (query) => {
 
@@ -59,6 +59,7 @@ const RenderingProfile = async (profile, token) => {
         }
 
         const userID = decoded.id;
+        const allowedToPost = await middleware.canUserPost(userID);
 
         // Check if the user follows the profile
         const [followResults] = await db.query(
@@ -67,9 +68,9 @@ const RenderingProfile = async (profile, token) => {
         );
         
         const follows = followResults.length > 0;
-        
+
         // Send the response with the follow status and profile image
-        return({ success: true, follows, pfp: image });
+        return({ success: true, follows, pfp: image, allowedToPost });
 
     } catch (err) {
         console.log(err);

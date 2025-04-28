@@ -32,6 +32,22 @@
     transition: background 0.2s;
 }
 
+.posting:hover {
+    background-color: #0056b3;
+}
+
+
+.posting.disabled {
+    background-color: #ff4d4f; /* red */
+    color: rgb(255, 255, 255);
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+  
+.posting.disabled:hover {
+    background-color: #ff4d4f; /* no hover effect */
+}
+
 .follow_button {
     display: flex;
     margin-left: auto;
@@ -43,11 +59,15 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.1s; 
 }
-
-.posting:hover {
-    background-color: #0056b3;
+  
+  .follow_button:hover {
+    background-color: #d0e7ff; 
+  }
+  
+  .follow_button:active {
+    transform: scale(0.95); 
 }
 
 .posts {
@@ -403,7 +423,7 @@
 
 /* Apply when the heart is "liked" */
 .liked {
-    color: #f00;  /* Red color when liked */
+    color: #ff1493;  /* Red color when liked */
 }
 
 /* Active effect for the like button */

@@ -1,24 +1,48 @@
 const { CanUserPost, CreatePost, Report, RenderPosts, DeletePosts, ChangeNickname, UploadProfileImage, ToggleLikeService } = require('../services/posts')
+const middleware = require('../middlweare');
 
 const createPost = async (req, res) => {
     const { song, quote, colorTheme } = req.body;
     const imagePath = req.file ? `uploads/${req.file.filename}` : null;
     const user = req.user;
 
+    if (!song || !quote || !colorTheme) {
+        if (imagePath) {
+            const fullPath = path.resolve(__dirname, "..", imagePath);
+            fs.unlink(fullPath, (err) => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        return res.status(400).json({ success: false, message: 'Missing song, quote or colorTheme' });
+    }
+
+
     const trimmedQuote = quote.trim();
     if (trimmedQuote.length < 5 || trimmedQuote.length > 200) {
         return res.status(400).json({ success: false, message: 'Quote must be between 5 and 200 characters.' });
     }
 
-    const { allowed, timeLeft } = await CanUserPost(user.id);
+    const { allowed, timeLeft } = await  middleware.canUserPost(user.id);
 
-    //if (!allowed) {
-        //return res.status(400).json({ success: false, message: `You can only post every 24 hours. Please wait ${Math.ceil(timeLeft)} Hours.` });
-    //}
+    if (!allowed) {
+        return res.status(400).json({ success: false, message: `You can only post every 24 hours. Please wait ${Math.ceil(timeLeft)} Hours.`, timeLeft: timeLeft });
+    }
 
     const result = await CreatePost(song, quote, colorTheme, imagePath, user);
     
     if (!result.success) {
+        if (imagePath) {
+            const fullPath = path.resolve(__dirname, "..", imagePath);
+            fs.unlink(fullPath, (err) => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        }
+
         return res.status(400).json(result);
     }
 
@@ -30,7 +54,6 @@ const renderPost = async (req, res) => {
     const { profile, filter, page } = req.query;
     const userId = req.user?.id;
 
-    console.log(filter, userId, profile, page);
     const result = await RenderPosts(filter, userId, profile, page);
 
     if (!result.success) {

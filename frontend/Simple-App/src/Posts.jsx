@@ -95,7 +95,6 @@ function Posts ({ filter, profile }) {
                     ];
                 });
                 setPage(prevPage => prevPage + 1);
-                console.log(page) 
                 setMessage('');
             }
         } catch (error) {
@@ -253,7 +252,8 @@ function Posts ({ filter, profile }) {
                         {/* Likes and report button */}
                         {user && (<>
                             <div className={styles.likeAndReport}>
-                                <button onClick={() => like(post.id)} className={`${styles.likeButton}`}>❤</button>   
+                                <button onClick={() => like(post.id)} 
+                                        className={`${styles.likeButton} ${post.liked ? styles.liked : ''}`}>❤</button>   
                                 <h3 className={styles.likeCounter}>{post.like_count}</h3>
                                 <button onClick={() => setReporting(true)}className={styles.reportButton}>🚩</button>
                             </div>

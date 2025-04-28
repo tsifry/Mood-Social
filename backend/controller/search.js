@@ -39,7 +39,7 @@ const renderingProfile = async (req, res) => {
     res.json(result);
 }
 
-unfollow = async (req, res) => {
+const unfollow = async (req, res) => {
     const profile = req.params.profile;
     const userID = req.user.id;
 

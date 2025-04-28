@@ -60,9 +60,32 @@ function decodeToken(token) {
     }
 }
 
+async function canUserPost (userId){
+    const [lastPost] = await db.query(
+        'SELECT created_at FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
+        [userId]
+    );
+
+    if (lastPost.length === 0) return { allowed: true };
+
+    const lastPostTime = new Date(lastPost[0].created_at);
+    const now = new Date();
+    const diffInHours = (now - lastPostTime) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+        return {
+            allowed: false,
+            timeLeft: 24 - diffInHours,
+        };
+    }
+
+    return { allowed: true };
+};
+
 module.exports = {
     getUserIdFromUsername,
     verifyToken,
     optionalAuth,
-    decodeToken
+    decodeToken,
+    canUserPost
 };

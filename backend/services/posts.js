@@ -73,8 +73,6 @@ const RenderPosts = async (filter, userId, profile, page) => {
             const pageSize = 3;
             const offset = (page - 1) * pageSize;
 
-            console.log(filter, userId, profile, page);
-
             //So, if the render posts are from a PROFILE:
             if (profile){
 
@@ -84,17 +82,20 @@ const RenderPosts = async (filter, userId, profile, page) => {
                     return ({ success: false, message: 'User not found' });
                 }
 
-                [results] = await db.query(
-                    'SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
-                    [ProfileId, pageSize, offset]
-                );
+                [results] = await db.query(`
+                    SELECT p.*, 
+                           IF(l.post_id IS NULL, 0, 1) AS liked
+                    FROM posts p
+                    LEFT JOIN likes l ON l.post_id = p.id AND l.user_id = ?
+                    WHERE p.user_id = ?
+                    ORDER BY p.created_at DESC
+                    LIMIT ? OFFSET ?
+                  `, [userId, ProfileId, pageSize, offset]);
 
                 if (results.length === 0) {
                     if (+page === 1) {
-                        console.log("User didn't post anything yet");
                         return { success: false, message: "User didn't post anything yet!" };
                     } else {
-                        console.log("No more posts available");
                         return { success: false, message: "No more posts available" };
                     }
                 }
@@ -107,14 +108,21 @@ const RenderPosts = async (filter, userId, profile, page) => {
                     return ({ success: false, message: 'User not found' }); 
                 }
 
-                [results] = await db.query(`SELECT p.* FROM posts p JOIN follows f ON p.user_id = f.followed_id WHERE f.follower_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?`, [userId, pageSize, offset]);
+                [results] = await db.query(`
+                    SELECT p.*, 
+                           IF(l.post_id IS NULL, 0, 1) AS liked
+                    FROM posts p
+                    JOIN follows f ON p.user_id = f.followed_id
+                    LEFT JOIN likes l ON l.post_id = p.id AND l.user_id = ?
+                    WHERE f.follower_id = ?
+                    ORDER BY p.created_at DESC
+                    LIMIT ? OFFSET ?
+                  `, [userId, userId, pageSize, offset]);
 
                 if (results.length === 0) {
                     if(+page === 1) {
-                        console.log("You don't follow any profiles yet!");
                         return { success: false, message: "You don't follow any profiles yet!" };
                     } else {
-                        console.log("HAHAHHA");
                         return { success: false, message: "No more posts available" };
                     }
                 } 
@@ -124,10 +132,16 @@ const RenderPosts = async (filter, userId, profile, page) => {
             else {
 
                 [results] = await db.query(
-                    `SELECT * FROM posts
-                     ORDER BY LOG10(GREATEST(like_count, 1)) + (UNIX_TIMESTAMP(created_at) / 45000) DESC
+                    `SELECT 
+                        posts.*, 
+                        CASE WHEN likes.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS liked
+                     FROM posts
+                     LEFT JOIN likes 
+                        ON posts.id = likes.post_id 
+                        AND likes.user_id = ?
+                     ORDER BY LOG10(GREATEST(posts.like_count, 1)) + (UNIX_TIMESTAMP(posts.created_at) / 45000) DESC
                      LIMIT ? OFFSET ?`,
-                    [pageSize, offset]
+                    [userId, pageSize, offset]
                 );
 
                 if (results.length === 0) {
