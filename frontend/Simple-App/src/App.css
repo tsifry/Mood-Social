@@ -1,10 +1,8 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Custom styles that can't be easily replaced with Tailwind */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -20,8 +18,52 @@
   }
 }
 
+/* Custom utility classes */
+.profile_image {
+  @apply w-14 h-14 object-cover rounded-full;
+}
+
 .card {
-  padding: 2em;
+  @apply bg-slate-900 border border-slate-800 rounded-2xl shadow-3xl p-6 mb-6 transition-all duration-200;
+}
+
+input, button, select, textarea {
+  @apply bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200;
+}
+
+/* Global dark theme */
+html, body, #root {
+  @apply bg-black text-white min-h-screen;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #181924;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #23263a;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #3a3e5a;
+}
+
+/* Custom shadow for cards */
+.shadow-3xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
 }
 
 .read-the-docs {
@@ -32,17 +74,39 @@ ul {
   list-style-type: none;
 }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: #0e0d0d; 
-  color: aliceblue;
+[data-theme='dark'] {
+  @apply bg-black text-white;
+}
+[data-theme='light'] {
+  @apply bg-slate-100 text-slate-900;
+}
+[data-theme='yellow'] {
+  background: linear-gradient(135deg, #f9d423 0%, #ff4e50 100%);
+  color: #181924;
+}
+[data-theme='bluegreen'] {
+  background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+  color: #181924;
 }
 
-.profile_image{
-  width: 100px;
-  height: 100px;
-  object-fit: cover; /* ensures the image fills the circle without distortion */
-  border-radius: 50%;
+@media (max-width: 1024px) {
+  .ml-64, .w-64 {
+    margin-left: 0 !important;
+    width: 100% !important;
+    position: static !important;
+  }
+  .fixed {
+    position: static !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .max-w-2xl {
+    max-width: 100% !important;
+    padding: 0 1rem !important;
+  }
+  .sidebar {
+    width: 100% !important;
+    padding: 1rem !important;
+  }
 }

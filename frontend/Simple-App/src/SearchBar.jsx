@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import debounce from "lodash.debounce";
 import { useNavigate, useLocation } from "react-router-dom";
-import styles from "./css/Sidebar.module.css";
 
 
 function SearchBar (){
@@ -53,13 +52,13 @@ function SearchBar (){
         <input onChange={handleChange}
                placeholder="User..."
                value={search}
-               className={styles.searchInput}></input>
+               ></input>
 
         {results.length > 0 && (
-        <ul className={styles.searchUl}>
+        <ul>
             {results.map((result) => (
                 <li onClick={() => handleSelectUser(result.username)}
-                    className={styles.searchLi}><img src={`http://localhost:3000/${result.profile_image}`} className={styles.search_image}></img>{result.username}</li>
+                ><img src={`http://localhost:3000/${result.profile_image}`}></img>{result.username}</li>
             ))}
         </ul>)}
     

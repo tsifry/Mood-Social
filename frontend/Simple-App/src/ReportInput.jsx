@@ -31,7 +31,7 @@ function ReportInput({ postId }){
     };
 
     return (
-        <div className="report-input">
+        <div>
             <form onSubmit={handleSubmit}>
                 <textarea
                     value={message}
@@ -43,8 +43,8 @@ function ReportInput({ postId }){
                 ></textarea>
                 <button type="submit">Report</button>
             </form>
-            {error && <p className="error">{error}</p>}
-            {success && <p className="success">Post reported successfully!</p>}
+            {error && <p>{error}</p>}
+            {success && <p>Post reported successfully!</p>}
         </div>
     );
 }

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider";
 import LazyEmbed from "./LazyEmbed";
-import styles from "./css/Profile.module.css";
 import ReportInput from "./ReportInput";
+import { Heart, Flag } from 'lucide-react';
 
 
 function Posts ({ filter, profile }) {
@@ -129,11 +129,11 @@ function Posts ({ filter, profile }) {
 
 
     const colorThemes = {
-        sunset: { user: "#432C51", post: "#F1B5C6" },
-        ocean: { user: "#1B3B5F", post: "#A2D2FF" },
-        forest: { user: "#2E473B", post: "#B5E1B9" },
-        night: { user: "#1E1E2F", post: "#3A3A55" },
-        peach: { user: "#4F2E2E", post: "#F7C59F" },
+        sunset: { border: "border-pink-400", bg: "bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600" },
+        ocean: { border: "border-cyan-400", bg: "bg-gradient-to-br from-blue-500 via-cyan-400 to-teal-300" },
+        forest: { border: "border-green-400", bg: "bg-gradient-to-br from-green-400 via-emerald-400 to-lime-300" },
+        night: { border: "border-purple-400", bg: "bg-gradient-to-br from-purple-700 via-indigo-700 to-blue-900" },
+        peach: { border: "border-orange-400", bg: "bg-gradient-to-br from-orange-400 via-pink-400 to-yellow-300" },
     };
 
     //handles liking posts
@@ -210,69 +210,109 @@ function Posts ({ filter, profile }) {
     }, [loading, hasMore, page]);
       
     return (<>
-
-        <div className={styles.posts}>
+        <div className="max-w-xl mx-auto px-0 py-8 space-y-8">
             {posts[1]?.map((post, index) => {
                 const theme = colorThemes[post.colorTheme] || colorThemes["night"];
                 const { url, type } = extractAudioEmbed(post.song_url);
-        
                 const post_user = posts[0]?.find(u => u.id === post.user_id);
-        
                 return (
-                    <div key={index} className={styles.post} style={{ backgroundColor: theme.post }}>
-                        
-                        {/* Header */}
-                        <div className={styles.post_user} style={{ backgroundColor: theme.user, cursor: "pointer" }}
-                            onClick={() => navigateToUser(post_user?.username)}>
-                            <img src={`http://localhost:3000/${post_user?.profile_image}`} className={styles.user_image} />
-                            <h1>{post_user?.username}</h1>
+                    <div key={index} className={`card border-4 ${theme.border} ${theme.bg} hover:shadow-3xl transition-all duration-300 overflow-hidden group max-w-xl mx-auto`}>                        
+                        {/* Header - User Info */}
+                        <div 
+                            onClick={() => navigateToUser(post_user?.username)}
+                            className="flex items-center space-x-4 p-4 cursor-pointer hover:bg-slate-800 transition-colors duration-200"
+                        >
+                            <img 
+                                src={`http://localhost:3000/${post_user?.profile_image}`}
+                                alt={`${post_user?.username}'s profile`}
+                                className="w-14 h-14 rounded-full object-cover ring-2 ring-white hover:ring-purple-500 transition-all duration-200"
+                            />
+                            <div>
+                                <h3 className="text-white font-semibold text-lg hover:text-purple-300 transition-colors duration-200">
+                                    {post_user?.username}
+                                </h3>
+                                <p className="text-gray-400 text-sm">Daily Mood</p>
+                            </div>
                         </div>
-
-                        {/* Embeds */}
-                        <div className={styles.playerWrapper}>
+                        {/* Music Embed */}
+                        <div className="px-4 pb-2">
                             <LazyEmbed type={type} url={url} />
                         </div>
-                    
                         {/* Image */}
                         {post.image_url && (
-                            <div className={styles._image}>
-                                <img src={`http://localhost:3000/${post.image_url}`} className={styles._image} />
+                            <div className="px-4 pb-2">
+                                <img 
+                                    src={`http://localhost:3000/${post.image_url}`}
+                                    alt="Post image"
+                                    className="w-full rounded-xl object-cover shadow-lg hover:scale-[1.02] transition-transform duration-300 max-h-60 min-h-60"
+                                />
                             </div>
                         )}
-                        
-                        {/* Post bottom */}
-                        <div className={styles.captionBox} style={{ backgroundColor: theme.user }}>
-                            <h1 className={styles.captionText}>{post.quote}</h1>
-
-                            {user.username === profile && (
-                                <button onClick={() => handleDelete(post.id)} className={styles.deleteButton}>Delete</button>
-                            )}
+                        {/* Quote */}
+                        <div className="px-4 pb-4">
+                            <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 border-l-4 border-slate-600">
+                                <p className="text-white text-lg leading-relaxed font-medium italic">
+                                    "{post.quote}"
+                                </p>
+                            </div>
                         </div>
-                        
-                        {/* Likes and report button */}
-                        {user && (<>
-                            <div className={styles.likeAndReport}>
-                                <button onClick={() => like(post.id)} 
-                                        className={`${styles.likeButton} ${post.liked ? styles.liked : ''}`}>❤</button>   
-                                <h3 className={styles.likeCounter}>{post.like_count}</h3>
-                                <button onClick={() => setReporting(true)}className={styles.reportButton}>🚩</button>
+                        {/* Action Bar */}
+                        <div className="px-4 pb-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-6">
+                                    {user && (
+                                        <>
+                                            <button 
+                                                onClick={() => like(post.id)} 
+                                                className="flex items-center space-x-2 text-gray-400 hover:text-pink-500 transition-colors duration-200 group"
+                                            >
+                                                <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill={liked ? 'pink' : 'none'} />
+                                                <span className="font-medium">{post.like_count}</span>
+                                            </button>
+                                            
+                                            <button 
+                                                onClick={() => setReporting(true)}
+                                                className="text-gray-400 hover:text-yellow-500 transition-colors duration-200 text-xl hover:scale-110 transition-transform duration-200"
+                                            >
+                                                <Flag className="w-5 h-5" />
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                                
+                                {user && user.username === profile && (
+                                    <button 
+                                        onClick={() => handleDelete(post.id)}
+                                        className="text-gray-400 hover:text-red-500 transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-red-500/10"
+                                    >
+                                        Delete
+                                    </button>
+                                )}
                             </div>
-                        </>)}
+                        </div>
 
-                        {/* Reporting */}
+                        {/* Reporting Modal */}
                         {reporting && (
-                            <div className={styles.reportInput}>
-                                <ReportInput postId={post.id} />
-                                <button onClick={() => setReporting(false)}>Close</button>
+                            <div className="px-6 pb-6">
+                                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                    <ReportInput postId={post.id} />
+                                    <button 
+                                        onClick={() => setReporting(false)}
+                                        className="mt-3 text-gray-400 hover:text-white transition-colors duration-200"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
                             </div>
                         )}
-
                     </div>
                 );
             })}
         </div>
-        <div>
-            <h2>{message}</h2>
+        
+        {/* Loading/Message */}
+        <div className="max-w-2xl mx-auto px-4 pb-8">
+            <h2 className="text-center text-gray-400 text-lg">{message}</h2>
         </div>  
     </>);
 

@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import Posts from "./Posts";
 import Sidebar from "./Sidebar";
-import styles from "./css/Profile.module.css";
+import { X } from 'lucide-react';
+
 
 function Profile() {
 
@@ -211,172 +212,195 @@ function Profile() {
     }
 
     return (
-        <div>
-
-            <div>
+        <div className="min-h-screen bg-black">
+            <div className="fixed top-0 left-0 h-full z-50">
                 <Sidebar></Sidebar>
             </div>
 
-            {/*Render up part of profile */}
-            <div className={styles.user}>
-
-                {pfp && (
-                    <div className={styles.userInfo}>
-                        <img src={`http://localhost:3000/${pfp}`} alt="Profile" className="profile_image" />
-                        <h1>{profile}</h1>
-                    </div>
-                )}
-
-                {/*Following button if in other profile */}
-                {user && user.username !== profile && pfp && (<>
-                
-                    <> 
-                        {following ? (
-                        <>
-                            <button onClick={unfollow} className={styles.follow_button}>Unfollow {profile}</button> 
-                            <p></p>
-                        </>) : (
-                            
-                        <>
-                            <button onClick={follow} className={styles.follow_button}>Follow {profile}</button> 
-                            <p></p>
-                        </>)}
-                    </>
-                
-                </>)}
-
-            </div>
-
-            {/* This is just the stuff that appears to submit a new post. */}
-            {posting && user.username === profile &&
-            (<> <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <button className={styles.closeButton} onClick={cancellPost}>✕</button>
-
-                        {/*Song input */}
-                        <div className={styles.post_message}>
-                            <h2>Song of the day.</h2>
-                            <h3>Paste a soundcloud or Spotify song link</h3>
-                        </div>
-
-                        <div>
-                            <input type="text"
-                                   name="song"
-                                   value={formData.song}
-                                   onChange={handleChange}
-                                   ></input>
-                            
-                        </div>
-                           
-                        <div>
-                            {song_type === "spotify" && (<>
-                                <iframe
-                                    style={{ borderRadius: "12px" }}
-                                    src={`${extractAudioEmbed(formData.song).url}?utm_source=generator&theme=0`}
-                                    width="100%"
-                                    height="150"
-                                    frameBorder="0"
-                                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                    allowFullScreen
-                                    loading="lazy"
-                                />
-                            </>)}
-
-                            {song_type === "soundcloud" && (<>
-                                <iframe width="100%"
-                                    height="152"
-                                    scrolling="no"
-                                    frameBorder="no"
-                                    allow="autoplay"
-                                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(formData.song)}
-                                    &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
-                                />
-                            </>)}
-                        </div>
-                        
-                        {/*Image input */}
-                        <div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                ref={postFile}
-                                style={{ display: "none" }}
-                                onChange={handleImageUpload}
+            <div className="ml-64">
+                {/* Profile Header - Centered like Twitter */}
+                <div className="max-w-2xl mx-auto px-4 py-6">
+                    {pfp && (
+                        <div className="flex flex-col items-center text-center mb-8">
+                            <img 
+                                src={`http://localhost:3000/${pfp}`} 
+                                alt="Profile" 
+                                className="w-24 h-24 rounded-full object-cover ring-4 ring-gray-700 mb-4"
                             />
-
-                            <button className={styles.image_button}
-                                    onClick={() => postFile.current.click()}>Upload image.</button>
+                            <h1 className="text-2xl font-bold text-white mb-2">{profile}</h1>
+                            <p className="text-gray-400">Daily Mood Creator</p>
                         </div>
+                    )}
 
-                        <div className={styles.themePicker}>
-                            
-                            {/*Color input */}
-                            <h2>Pick your color vibe</h2>
-
-                            <div className={styles.themeOptions}>
-                                {Object.entries(colorThemes).map(([key, value]) => (
-                                <button
-                                    key={key}
-                                    onClick={() => setFormData({ ...formData, colorTheme: key })}
-                                    style={{
-                                    background: `linear-gradient(45deg, ${value.user}, ${value.post})`,
-                                    border: formData.colorTheme === key ? "2px solid white" : "none",
-                                    width: "50px",
-                                    height: "50px",
-                                    borderRadius: "50%",
-                                    margin: "0.5rem",
-                                    cursor: "pointer",
-                                    }}
-                                />
-                                ))}
-                            </div>
+                    {/* Following button if in other profile */}
+                    {user && user.username !== profile && pfp && (
+                        <div className="flex justify-center mb-6">
+                            {following ? (
+                                <button 
+                                    onClick={unfollow}
+                                    className="bg-gray-800 text-white px-6 py-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                                >
+                                    Unfollow {profile}
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={follow}
+                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2 rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all duration-200"
+                                >
+                                    Follow {profile}
+                                </button>
+                            )}
                         </div>
-                        
-                        {/*Quote input */}
-                        <div className={styles.post_message}>
-
-                            <h2>Quote of the day</h2>
-                            <h3>Type your best quote!</h3>
-
-                        </div>
-                                <input value={formData.quote}
-                                       name="quote"
-                                       onChange={handleChange}
-                                       maxLength={250}></input>
-
-                        <div>
-                            
-                        </div>
-
-                        <button onClick={handlePost}>Post</button>
-                    </div>
+                    )}
                 </div>
-            
-            </>)}
-            
-            {/*Button to start posting*/}
-            <div>
-                {user.username === profile && (
-                    <div>
-                        <button
-                            onClick={() => allowedToPost && setPosting(!posting)}
-                            className={`${styles.posting} ${allowedToPost === false ? styles.disabled : ''}`}
-                            disabled={allowedToPost === false}
-                        >
-                            {allowedToPost === null
-                                ? "Loading..." 
-                                : allowedToPost
-                                    ? "Post"
-                                    : "You can post again in " + Math.ceil(postTimer) + " hours."
-                            }
-                        </button>
+
+                {/* Post Creation Modal */}
+                {posting && user.username === profile && (
+                    <div className="max-w-2xl mx-auto px-4 mb-8">
+                        <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-white">Create New Post</h2>
+                                <button 
+                                    onClick={cancellPost}
+                                    className="text-gray-400 hover:text-white text-2xl transition-colors duration-200"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            {/* Song input */}
+                            <div className="mb-6">
+                                <h3 className="text-white font-semibold mb-2">Song of the day</h3>
+                                <p className="text-gray-400 text-sm mb-3">Paste a soundcloud or Spotify song link</p>
+                                <input 
+                                    type="text"
+                                    name="song"
+                                    value={formData.song}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                    placeholder="Enter song URL"
+                                />
+                            </div>
+                               
+                            <div className="mb-6">
+                                {song_type === "spotify" && (
+                                    <iframe
+                                        style={{ borderRadius: "12px" }}
+                                        src={`${extractAudioEmbed(formData.song).url}?utm_source=generator&theme=0`}
+                                        width="100%"
+                                        height="150"
+                                        frameBorder="0"
+                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                        allowFullScreen
+                                        loading="lazy"
+                                    />
+                                )}
+
+                                {song_type === "soundcloud" && (
+                                    <iframe 
+                                        width="100%"
+                                        height="152"
+                                        scrolling="no"
+                                        frameBorder="no"
+                                        allow="autoplay"
+                                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(formData.song)}
+                                        &color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`}
+                                    />
+                                )}
+                            </div>
+                            
+                            {/* Image input */}
+                            <div className="mb-6">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={postFile}
+                                    style={{ display: "none" }}
+                                    onChange={handleImageUpload}
+                                />
+
+                                <button
+                                    onClick={() => postFile.current.click()}
+                                    className="w-full bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors duration-200"
+                                >
+                                    Upload image
+                                </button>
+                            </div>
+
+                            <div className="mb-6">
+                                {/* Color input */}
+                                <h3 className="text-white font-semibold mb-3">Pick your color vibe</h3>
+
+                                <div className="flex justify-center space-x-4">
+                                    {Object.entries(colorThemes).map(([key, value]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setFormData({ ...formData, colorTheme: key })}
+                                        style={{
+                                        background: `linear-gradient(45deg, ${value.user}, ${value.post})`,
+                                        border: formData.colorTheme === key ? "3px solid white" : "none",
+                                        width: "50px",
+                                        height: "50px",
+                                        borderRadius: "50%",
+                                        cursor: "pointer",
+                                        }}
+                                        className="hover:scale-110 transition-transform duration-200"
+                                    />
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* Quote input */}
+                            <div className="mb-6">
+                                <h3 className="text-white font-semibold mb-2">Quote of the day</h3>
+                                <p className="text-gray-400 text-sm mb-3">Type your best quote!</p>
+                                <input 
+                                    value={formData.quote}
+                                    name="quote"
+                                    onChange={handleChange}
+                                    maxLength={250}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                    placeholder="Enter your quote..."
+                                />
+                            </div>
+
+                            <button 
+                                onClick={handlePost}
+                                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                Post
+                            </button>
+                        </div>
                     </div>
                 )}
+                
+                {/* Button to start posting */}
+                <div className="max-w-2xl mx-auto px-4 mb-8">
+                    {user.username === profile && (
+                        <div className="flex justify-center">
+                            <button
+                                onClick={() => allowedToPost && setPosting(!posting)}
+                                disabled={allowedToPost === false}
+                                className={`px-8 py-3 rounded-full font-semibold transition-all duration-200 ${
+                                    allowedToPost 
+                                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl' 
+                                        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                {allowedToPost === null
+                                    ? "Loading..." 
+                                    : allowedToPost
+                                        ? "Create Post"
+                                        : "You can post again in " + Math.ceil(postTimer) + " hours."
+                                }
+                            </button>
+                        </div>
+                    )}
+                </div>
+                
+                {/* Posts render */}
+                <Posts filter={null} profile={profile}></Posts>
             </div>
-            
-            {/*Posts render */}
-            <Posts filter={null} profile={profile}></Posts>
-            
         </div>
     );
 }
