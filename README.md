@@ -1,6 +1,4 @@
-Rede Social Criativa – README
-
-Bem-vindo à Rede Social Criativa, um espaço pensado para incentivar a expressão pessoal de forma simples, única e significativa.
+Bem-vindo à Rede Social Mood Social, um espaço pensado para incentivar a expressão pessoal de forma simples, única e significativa.
 
 Conceito
 
